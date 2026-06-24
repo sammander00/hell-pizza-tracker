@@ -1537,16 +1537,23 @@
             await loadRemoteConfig();
             // Register Service Worker for PWA and auto-update
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').then((reg) => {
-                    // Check for a new version every 5 minutes
-                    setInterval(() => reg.update(), 60 * 1000);
-                });
-
-                // Reload when a new service worker takes control
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    location.reload();
-                });
+                navigator.serviceWorker.register('./sw.js');
             }
+
+            // Auto-refresh: poll index.html every 60s and reload if the file has changed
+            let _lastETag = null;
+            async function checkForAppUpdate() {
+                try {
+                    const res = await fetch('./index.html', { method: 'HEAD', cache: 'no-store' });
+                    const tag = res.headers.get('etag') || res.headers.get('last-modified');
+                    if (_lastETag !== null && tag && tag !== _lastETag) {
+                        location.reload();
+                    }
+                    if (tag) _lastETag = tag;
+                } catch (_) {}
+            }
+            checkForAppUpdate();
+            setInterval(checkForAppUpdate, 60 * 1000);
 
             // Keep Screen On (Wake Lock)
             if ('wakeLock' in navigator) {
