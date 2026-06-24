@@ -1,7 +1,8 @@
-const CACHE_NAME = 'hell-pizza-store-v1.5';
+const CACHE_NAME = 'hell-pizza-store-v1.6';
 const ASSETS = [
     './index.html',
     './manifest.json',
+    './assets/icon.png',
 ];
 
 self.addEventListener('install', (e) => {
