@@ -1399,6 +1399,58 @@
             return totals;
         }
 
+        function getMonthlyBreakdown() {
+            const months = [];
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+
+            // Past months from archive (oldest → newest, reversed at end)
+            for (let i = 0; i < archive.length; i++) {
+                const entry = archive[i];
+                const summary = entry.summary || {};
+                const staffCounts = [];
+                let storeTotal = 0;
+                for (const staff in summary) {
+                    const pizzas = summary[staff];
+                    let count = 0;
+                    for (const pizza in pizzas) count += (pizzas[pizza] || 0);
+                    if (count > 0) staffCounts.push({ name: staff, count });
+                    storeTotal += count;
+                }
+                staffCounts.sort((a, b) => b.count - a.count);
+                let monthLabel = entry.month || '';
+                if (/^\d{4}-\d{2}$/.test(monthLabel)) {
+                    const d = new Date(monthLabel + '-01T00:00:00');
+                    monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                }
+                months.push({ month: monthLabel, storeTotal, staff: staffCounts });
+            }
+
+            // Current month from live data
+            const current = loadData();
+            const currentStaffCounts = [];
+            let currentTotal = 0;
+            for (const staff in current) {
+                const pizzas = current[staff] || {};
+                let count = 0;
+                for (const pizza in pizzas) {
+                    const e = pizzas[pizza];
+                    count += Array.isArray(e) ? e.length : (e ? 1 : 0);
+                }
+                if (count > 0) currentStaffCounts.push({ name: staff, count });
+                currentTotal += count;
+            }
+            currentStaffCounts.sort((a, b) => b.count - a.count);
+            const now = new Date();
+            months.push({
+                month: now.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                storeTotal: currentTotal,
+                staff: currentStaffCounts
+            });
+
+            months.reverse(); // newest first
+            return months;
+        }
+
         // ===== GOOGLE SHEETS SYNC CONFIG =====
         const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx-VRjPjFI1zn26kp2_SYdgWesVz2mtfPr0pPR41BJPMwsLjHrmDAPMK4ZNPiw0tJik/exec';
         const BACKGROUND_SYNC_INTERVAL = 20 * 60 * 1000; // 20 minutes
@@ -1486,7 +1538,8 @@
                 pizzas: getActivePizzas(),
                 allTimeStaffTotals: getAllTimeStaffTotals(),
                 allTimeTotal: getAllTimeTotal(),
-                allTimePerPizzaTotals: getAllTimePerPizzaTotals()
+                allTimePerPizzaTotals: getAllTimePerPizzaTotals(),
+                monthlyBreakdown: getMonthlyBreakdown()
             }));
         }
 
