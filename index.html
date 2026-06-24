@@ -1191,9 +1191,10 @@
                         To set this up, go to your Google Sheet, open Extensions &rarr; Apps Script, deploy as a web app, and copy the URL here.
                     </p>
                     <div id="devSheetsStatus" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;color:#555;">Not connected</div>
-                    <input class="dev-input" id="devSheetsUrlInput" placeholder="Paste Apps Script URL..." />
-                    <div style="display:flex;gap:10px;">
+                    <input class="dev-input" id="devSheetsUrlInput" placeholder="Paste Apps Script URL or scan QR..." />
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
                         <button class="dev-btn" style="margin-bottom:0;" onclick="devSaveSheetsUrl()">Save & Connect</button>
+                        <button class="dev-btn secondary" style="width:auto;white-space:nowrap;margin-bottom:0;" onclick="scanSheetsQR()">&#x1F4F7; Scan QR</button>
                         <button class="dev-btn secondary" style="width:auto;white-space:nowrap;margin-bottom:0;" onclick="devTestSheets()">Test</button>
                     </div>
                 </div>
@@ -2166,6 +2167,41 @@ function openDev() {
             input.value = '';
             updateSheetsStatus();
             alert('Connected. Sync will now use this URL.');
+        }
+
+        function scanSheetsQR() {
+            if (!('BarcodeDetector' in window)) {
+                alert('QR scanning is not supported on this browser. Please paste the URL manually.');
+                return;
+            }
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            input.addEventListener('change', async () => {
+                const file = input.files && input.files[0];
+                document.body.removeChild(input);
+                if (!file) return;
+                try {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(file);
+                    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    const codes = await detector.detect(img);
+                    URL.revokeObjectURL(img.src);
+                    if (!codes.length) { alert('No QR code found in the photo. Try again with better lighting or move closer.'); return; }
+                    const url = codes[0].rawValue;
+                    if (!url.startsWith('https://')) { alert('QR code found but it does not contain a valid URL:\n' + url); return; }
+                    localStorage.setItem(SHEETS_URL_KEY, url);
+                    updateSheetsStatus();
+                    alert('Connected via QR code.');
+                } catch (e) {
+                    alert('Could not read QR code. Please try again or paste the URL manually.');
+                }
+            });
+            input.click();
         }
 
         function devTestSheets() {
