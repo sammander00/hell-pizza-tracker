@@ -1285,7 +1285,7 @@
         // ===== REMOTE CONFIG =====
         // Edit pizza list and scheduled pizzas by updating config.json on GitHub.
         // Each tablet fetches this on startup; staff/counts stay per-tablet in localStorage.
-        const REMOTE_CONFIG_URL = './config.json';
+        const REMOTE_CONFIG_URL = 'https://raw.githubusercontent.com/sammander00/hell-pizza-tracker/refs/heads/main/config.json';
         const CONFIG_CACHE_KEY = 'hell_remote_config';
 
         const CONFIG_DEFAULTS = {
