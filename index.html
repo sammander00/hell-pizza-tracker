@@ -1565,6 +1565,7 @@
 
             setupBackButton();
             checkMonthlyReset();
+            setupFullscreen();
 
             if (isFirstLaunch) {
                 // Show setup screen (already active by default)
@@ -1573,6 +1574,29 @@
                 updateLeaderboard();
                 showStaffScreen();
             }
+        }
+
+        // Fullscreen
+        function setupFullscreen() {
+            function enterFullscreen() {
+                const el = document.documentElement;
+                if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            }
+
+            function requestOnNextTap() {
+                document.addEventListener('click', enterFullscreen, { once: true });
+                document.addEventListener('touchstart', enterFullscreen, { once: true, passive: true });
+            }
+
+            requestOnNextTap();
+
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) requestOnNextTap();
+            });
+            document.addEventListener('webkitfullscreenchange', () => {
+                if (!document.webkitFullscreenElement) requestOnNextTap();
+            });
         }
 
         // Update the leaderboard display
