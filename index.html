@@ -550,63 +550,133 @@
             opacity: 0.85;
         }
 
-        /* Tablet Optimization */
-        @media (max-width: 768px) {
+        /* Tablet Optimization — targets 800×1280 and smaller */
+        @media (max-width: 900px) {
+
+            /* ---- Global ---- */
+            .screen {
+                padding: 0 16px;
+            }
+
             .screen-title {
-                font-size: 2.2rem;
-                margin-bottom: 30px;
-            }
-
-            .staff-btn {
-                width: 150px;
-                height: 150px;
-                font-size: 1.5rem;
-            }
-
-            .staff-grid {
-                gap: 20px;
-            }
-
-            .pizza-item {
-                grid-template-columns: 1fr auto;
-                grid-template-rows: auto auto;
-                gap: 8px;
-                padding: 14px 0;
-            }
-
-            .pizza-name {
-                grid-column: 1 / -1;
-                font-size: 1.3rem;
-            }
-
-            .pizza-status {
-                text-align: left;
-                grid-column: 1;
-                padding-right: 0;
-            }
-
-            .weigh-btn {
-                grid-column: 2;
-                min-width: auto;
-                padding: 10px 16px;
-                font-size: 0.85rem;
-            }
-
-            .current-staff {
-                font-size: 2.8rem;
-            }
-
-            .subtitle {
-                font-size: 2rem;
+                font-size: 2.4rem;
+                margin-bottom: 24px;
                 letter-spacing: 3px;
             }
 
-            .leaderboard-name, .leaderboard-count, .leaderboard-rank {
-                font-size: 1.2rem;
+            .subtitle {
+                font-size: 1.8rem;
+                letter-spacing: 3px;
+            }
+
+            /* ---- Staff grid: 4 per row at 800px ---- */
+            .staff-grid {
+                gap: 14px;
+                padding: 0;
+            }
+
+            .staff-btn {
+                width: 160px;
+                height: 140px;
+                font-size: 1.5rem;
+            }
+
+            /* ---- Pizza screen header ---- */
+            .pizza-header {
+                margin-bottom: 12px;
+                padding-bottom: 14px;
+                min-height: auto;
+            }
+
+            .current-staff {
+                font-size: 2rem;
+            }
+
+            .back-btn {
+                font-size: 0.8rem;
+                letter-spacing: 1px;
+            }
+
+            /* ---- Pizza list rows: switch to flexbox ---- */
+            .pizza-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 0;
+            }
+
+            /* The stale ! indicator sits outside the row boundary — hide it, colour conveys same info */
+            .pizza-item.stale-pizza::after {
+                display: none;
+            }
+
+            .pizza-name-wrapper {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .pizza-name {
+                font-size: 1.05rem;
+                letter-spacing: 0.5px;
+            }
+
+            .pizza-times {
+                font-size: 0.72rem;
+                margin-top: 2px;
+            }
+
+            /* Status text is redundant with colour coding — colour already signals stale/recent/today */
+            .pizza-status {
+                display: none;
+            }
+
+            .weigh-btn {
+                flex-shrink: 0;
+                min-width: 0;
+                padding: 14px 16px;
+                font-size: 0.8rem;
+                letter-spacing: 1px;
+                white-space: nowrap;
+            }
+
+            /* ---- Leaderboard ---- */
+            .leaderboard-section {
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+
+            .leaderboard-title {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
             }
 
             .leaderboard-item {
-                padding: 14px 18px;
+                padding: 12px 18px;
+            }
+
+            .leaderboard-rank {
+                font-size: 1.1rem;
+                width: 44px;
+            }
+
+            .leaderboard-name {
+                font-size: 1.1rem;
+            }
+
+            .leaderboard-count {
+                font-size: 1.2rem;
+            }
+
+            /* ---- Reset info & history btn ---- */
+            .reset-info {
+                font-size: 0.7rem;
+                margin-top: 14px;
+            }
+
+            .history-view-btn {
+                font-size: 0.75rem;
+                padding: 8px 18px;
+                margin-top: 10px;
             }
         }
 
