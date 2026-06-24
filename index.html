@@ -79,7 +79,7 @@
         /* Typography Helpers */
         .screen-title {
             font-family: 'Bangers', cursive;
-            font-size: 4rem;
+            font-size: 5.5rem;
             text-align: center;
             margin-bottom: 36px;
             color: #FE0000;
@@ -212,7 +212,7 @@
 
         .current-staff {
             font-family: 'Bangers', cursive;
-            font-size: 4.5rem;
+            font-size: 6.75rem;
             color: #E1D8B7;
             text-align: center;
         }
@@ -612,7 +612,7 @@
             }
 
             .screen-title {
-                font-size: 2.4rem;
+                font-size: 3.2rem;
                 margin-bottom: 18px;
                 letter-spacing: 3px;
             }
@@ -646,7 +646,7 @@
             }
 
             .current-staff {
-                font-size: 2rem;
+                font-size: 3rem;
             }
 
             .back-btn {
@@ -1248,7 +1248,7 @@
 
     <!-- Staff Selection Screen -->
     <div id="staffScreen" class="screen">
-        <h2 class="screen-title">Select Name</h2>
+        <h2 class="screen-title">Choose your Minion</h2>
         <div class="staff-grid" id="staffGrid"></div>
 
         <p class="reset-info">Next reset: <span id="nextResetDisplay">—</span></p>
@@ -1267,7 +1267,7 @@
     <div id="pizzaScreen" class="screen">
         <div class="pizza-header">
             <button id="backBtn" class="back-btn">Back to Staff</button>
-            <h2 class="current-staff">Staff: <span id="currentStaffName"></span></h2>
+            <h2 class="current-staff">Minion: <span id="currentStaffName"></span></h2>
         </div>
 
         <div class="pizza-list" id="pizzaList">
@@ -1536,12 +1536,17 @@
         // Initialize app
         async function init() {
             await loadRemoteConfig();
-            // Register Service Worker for PWA
+            // Register Service Worker for PWA and auto-update
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker
-                    .register('./sw.js')
-                    .then(() => { console.log('Service Worker Registered'); })
-                    .catch((err) => { console.log('SW Registration Failed'); });
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    // Check for a new version every 5 minutes
+                    setInterval(() => reg.update(), 60 * 1000);
+                });
+
+                // Reload when a new service worker takes control
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    location.reload();
+                });
             }
 
             // Keep Screen On (Wake Lock)
@@ -2027,7 +2032,7 @@
         document.addEventListener('DOMContentLoaded', init);
 
         // ===== DEVELOPER MENU =====
-        const DEV_PIN = '1337';
+        const DEV_PIN = '6363';
         let devTapCount = 0;
         let devTapTimer = null;
         let devPinEntry = '';
