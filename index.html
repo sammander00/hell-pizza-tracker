@@ -1340,6 +1340,65 @@
             return [...basePizzas, ...releasedPizzas].sort();
         }
 
+        function getAllTimeStaffTotals() {
+            const totals = {};
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+            for (let i = 0; i < archive.length; i++) {
+                const summary = archive[i].summary || {};
+                for (const staff in summary) {
+                    const pizzas = summary[staff];
+                    let count = 0;
+                    for (const pizza in pizzas) count += (pizzas[pizza] || 0);
+                    totals[staff] = (totals[staff] || 0) + count;
+                }
+            }
+            const current = loadData();
+            for (const staff in current) {
+                const pizzas = current[staff] || {};
+                let count = 0;
+                for (const pizza in pizzas) {
+                    const entry = pizzas[pizza];
+                    count += Array.isArray(entry) ? entry.length : (entry ? 1 : 0);
+                }
+                totals[staff] = (totals[staff] || 0) + count;
+            }
+            return totals;
+        }
+
+        function getAllTimeTotal() {
+            const totals = getAllTimeStaffTotals();
+            let sum = 0;
+            for (const k in totals) sum += totals[k];
+            return sum;
+        }
+
+        // Returns { staffName: { pizzaName: count } } — all-time counts from archive + current month
+        function getAllTimePerPizzaTotals() {
+            const totals = {};
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+            for (let i = 0; i < archive.length; i++) {
+                const summary = archive[i].summary || {};
+                for (const staff in summary) {
+                    if (!totals[staff]) totals[staff] = {};
+                    const pizzas = summary[staff];
+                    for (const pizza in pizzas) {
+                        totals[staff][pizza] = (totals[staff][pizza] || 0) + (pizzas[pizza] || 0);
+                    }
+                }
+            }
+            const current = loadData();
+            for (const staff in current) {
+                if (!totals[staff]) totals[staff] = {};
+                const pizzas = current[staff] || {};
+                for (const pizza in pizzas) {
+                    const entry = pizzas[pizza];
+                    const count = Array.isArray(entry) ? entry.length : (entry ? 1 : 0);
+                    if (count > 0) totals[staff][pizza] = (totals[staff][pizza] || 0) + count;
+                }
+            }
+            return totals;
+        }
+
         // ===== GOOGLE SHEETS SYNC CONFIG =====
         const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx-VRjPjFI1zn26kp2_SYdgWesVz2mtfPr0pPR41BJPMwsLjHrmDAPMK4ZNPiw0tJik/exec';
         const BACKGROUND_SYNC_INTERVAL = 20 * 60 * 1000; // 20 minutes
@@ -1351,6 +1410,15 @@
         }, BACKGROUND_SYNC_INTERVAL);
 
         // Sync to Google Sheets
+        let _syncTimer = null;
+        function scheduleSync() {
+            clearTimeout(_syncTimer);
+            _syncTimer = setTimeout(() => {
+                _syncTimer = null;
+                syncToGoogleSheets(false);
+            }, 1200);
+        }
+
         let toastTimer = null;
         function showToast(message, type) {
             const toast = document.getElementById('syncToast');
@@ -1396,7 +1464,14 @@
 
             xhr.onload = function () {
                 if (xhr.status === 200 || xhr.status === 302) {
-                    if (!silent) showToast('Synced', 'synced');
+                    var ok = true;
+                    try { ok = JSON.parse(xhr.responseText).status === 'ok'; } catch (e) {}
+                    if (ok) {
+                        if (!silent) showToast('Synced', 'synced');
+                    } else {
+                        if (!silent) showToast('Sync error – retrying…', 'error');
+                        setTimeout(() => syncToGoogleSheets(false), 2000);
+                    }
                 } else {
                     if (!silent) showToast('Sync failed', 'error');
                 }
@@ -1405,7 +1480,14 @@
                 if (!silent) showToast('Saved offline', 'offline');
             };
 
-            xhr.send(JSON.stringify({ records: records }));
+            xhr.send(JSON.stringify({
+                records: records,
+                staff: STAFF,
+                pizzas: getActivePizzas(),
+                allTimeStaffTotals: getAllTimeStaffTotals(),
+                allTimeTotal: getAllTimeTotal(),
+                allTimePerPizzaTotals: getAllTimePerPizzaTotals()
+            }));
         }
 
         function calculateDaysAgo(dateString) {
@@ -1820,7 +1902,16 @@
 
             saveData(data);
             updateLeaderboard();
-            setTimeout(() => syncToGoogleSheets(true), 1000);
+            if (isUndo) {
+                // Cancel any pending debounce from the weigh, sync immediately,
+                // then fire a backup sync 5s later in case the first was queued behind a lock
+                clearTimeout(_syncTimer);
+                _syncTimer = null;
+                syncToGoogleSheets(false);
+                setTimeout(() => syncToGoogleSheets(true), 5000);
+            } else {
+                scheduleSync();
+            }
         }
 
         // Format last weighed date for display
