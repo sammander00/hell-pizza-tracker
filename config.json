@@ -12,6 +12,7 @@
     "Gluttony",
     "Greed",
     "Grimm",
+    "*LTO* Lamb Bazaar",
     "Limbo",
     "Lust/Deluxe",
     "Mayhem",
@@ -26,8 +27,5 @@
     "Trouble",
     "Unearthly",
     "Wrath"
-  ],
-  "scheduledPizzas": [
-    { "name": "Peoples Pizza", "releaseDate": "2026-02-27T10:00:00+13:00" }
-  ]
+
 }
