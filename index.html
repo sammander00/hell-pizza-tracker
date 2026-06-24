@@ -1914,13 +1914,28 @@
             return null;
         }
 
+        // Returns an ISO-8601 string with the local timezone offset so the date
+        // portion always reflects the device's local date, not UTC.
+        function toLocalISOString(date) {
+            const off = -date.getTimezoneOffset();
+            const sign = off >= 0 ? '+' : '-';
+            const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
+            return date.getFullYear() +
+                '-' + pad(date.getMonth() + 1) +
+                '-' + pad(date.getDate()) +
+                'T' + pad(date.getHours()) +
+                ':' + pad(date.getMinutes()) +
+                ':' + pad(date.getSeconds()) +
+                sign + pad(off / 60) + ':' + pad(off % 60);
+        }
+
         // Toggle weighed status (Mark as weighed / Undo)
         function toggleWeighed(staffName, pizzaName) {
             const data = loadData();
             if (!data[staffName]) data[staffName] = {};
 
             const now = new Date();
-            const nowISO = now.toISOString();
+            const nowISO = toLocalISOString(now);
             let history = data[staffName][pizzaName] || [];
 
             // Normalize to array
