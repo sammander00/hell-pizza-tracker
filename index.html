@@ -20,6 +20,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            touch-action: manipulation;
         }
 
         body {
@@ -111,16 +112,60 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .staff-btn:hover {
             background: #FE0000;
-            /* --hell-red */
             border-color: #FE0000;
-            /* --hell-red */
             color: #000000;
-            /* --hell-black */
             transform: scale(1.05);
+        }
+
+        .staff-btn.has-photo {
+            border-color: transparent;
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.7);
+            font-size: 1.6rem;
+        }
+
+        .staff-btn.has-photo:hover {
+            background-color: transparent;
+            color: #fff;
+        }
+
+        .staff-btn.has-photo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%);
+            pointer-events: none;
+        }
+
+        .dev-photo-btn {
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Roboto', sans-serif;
+            margin-left: 6px;
+        }
+
+        .dev-photo-btn:hover { border-color: #aaa; color: #fff; }
+
+        .dev-staff-thumb {
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 2px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 1px solid #333;
         }
 
         /* Pizza List Layout */
@@ -581,6 +626,10 @@
                 font-size: 1.5rem;
             }
 
+            .staff-btn.has-photo {
+                font-size: 1.1rem;
+            }
+
             /* ---- Pizza screen header ---- */
             .pizza-header {
                 margin-bottom: 12px;
@@ -679,6 +728,46 @@
                 margin-top: 10px;
             }
         }
+
+        /* ===== Scroll shadow on pizza list ===== */
+        #pizzaScreen.active::after {
+            content: '';
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.92));
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ===== Sync toast ===== */
+        #syncToast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid #333;
+            color: #E1D8B7;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 24px;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        #syncToast.synced { border-color: #00FE00; color: #00FE00; }
+        #syncToast.offline { border-color: #FFD700; color: #FFD700; }
+        #syncToast.error  { border-color: #FE0000; color: #FE0000; }
+        #syncToast.show   { opacity: 1; }
 
         /* --- Banner Removal Hack --- */
         /* This targets common IDs and styles used by free hosts like Tiiny.host to inject banners */
@@ -1179,6 +1268,8 @@
     </div>
     </div>
 
+    <div id="syncToast"></div>
+
     <!-- Inlined Application Logic -->
     <script>
         // Hell Pizza Weighing Tracker App
@@ -1252,6 +1343,16 @@
         }, BACKGROUND_SYNC_INTERVAL);
 
         // Sync to Google Sheets
+        let toastTimer = null;
+        function showToast(message, type) {
+            const toast = document.getElementById('syncToast');
+            if (!toast) return;
+            clearTimeout(toastTimer);
+            toast.textContent = message;
+            toast.className = type + ' show';
+            toastTimer = setTimeout(() => { toast.className = type; }, 2500);
+        }
+
         function syncToGoogleSheets(silent) {
             const data = loadData();
             const records = [];
@@ -1287,13 +1388,15 @@
 
             xhr.onload = function () {
                 if (xhr.status === 200 || xhr.status === 302) {
-                    if (!silent) console.log('✅ Synced to Google Sheets');
+                    if (!silent) showToast('Synced', 'synced');
                 } else {
-                    if (!silent) console.log('❌ Error syncing to Google Sheets');
+                    if (!silent) showToast('Sync failed', 'error');
                 }
             };
+            xhr.onerror = function () {
+                if (!silent) showToast('Saved offline', 'offline');
+            };
 
-            // Fire and forget mostly
             xhr.send(JSON.stringify({ records: records }));
         }
 
@@ -1313,6 +1416,60 @@
 
         function saveStaffList() {
             localStorage.setItem('hell_staff_list', JSON.stringify(STAFF));
+        }
+
+        // Staff photos - base64 JPEG strings keyed by staff name
+        const STAFF_PHOTOS_KEY = 'hell_staff_photos';
+        let STAFF_PHOTOS = JSON.parse(localStorage.getItem(STAFF_PHOTOS_KEY) || '{}');
+
+        function saveStaffPhotos() {
+            localStorage.setItem(STAFF_PHOTOS_KEY, JSON.stringify(STAFF_PHOTOS));
+        }
+
+        function captureStaffPhoto(staffName) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'user';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            input.addEventListener('change', () => {
+                if (input.files && input.files[0]) {
+                    processStaffPhoto(input.files[0], staffName);
+                }
+                document.body.removeChild(input);
+            });
+            input.click();
+        }
+
+        function processStaffPhoto(file, staffName) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    const ctx = canvas.getContext('2d');
+                    const srcSize = Math.min(img.naturalWidth, img.naturalHeight);
+                    const srcX = (img.naturalWidth - srcSize) / 2;
+                    const srcY = (img.naturalHeight - srcSize) / 2;
+                    ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, 300, 300);
+                    STAFF_PHOTOS[staffName] = canvas.toDataURL('image/jpeg', 0.75);
+                    saveStaffPhotos();
+                    refreshStaffButtons();
+                    renderDevStaffList();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeStaffPhoto(staffName) {
+            delete STAFF_PHOTOS[staffName];
+            saveStaffPhotos();
+            refreshStaffButtons();
+            renderDevStaffList();
         }
 
         // Current state
@@ -1523,20 +1680,29 @@
             }
 
             button.addEventListener('click', () => {
-                const isMarkingWeighed = button.textContent === 'Mark as Weighed';
-                toggleWeighed(currentStaff, pizzaName);
-                renderPizzaList();
+                if (button.disabled) return;
+                button.disabled = true;
 
-                // If we just marked it as weighed, trigger the burst on the new button
+                const isMarkingWeighed = button.textContent === 'Mark as Weighed';
                 if (isMarkingWeighed) {
-                    const newButtons = document.querySelectorAll('.weigh-btn');
-                    newButtons.forEach(btn => {
-                        const row = btn.closest('.pizza-item');
-                        if (row.querySelector('.pizza-name').textContent === pizzaName) {
-                            btn.classList.add('fire-burst');
-                        }
-                    });
+                    button.textContent = 'Saving...';
+                    button.style.opacity = '0.5';
                 }
+
+                setTimeout(() => {
+                    toggleWeighed(currentStaff, pizzaName);
+                    renderPizzaList();
+
+                    if (isMarkingWeighed) {
+                        const newButtons = document.querySelectorAll('.weigh-btn');
+                        newButtons.forEach(btn => {
+                            const row = btn.closest('.pizza-item');
+                            if (row.querySelector('.pizza-name').textContent === pizzaName) {
+                                btn.classList.add('fire-burst');
+                            }
+                        });
+                    }
+                }, 300);
             });
 
             item.appendChild(nameWrapper);
@@ -1910,7 +2076,7 @@ function openDev() {
             try {
                 const obj = JSON.parse(json);
                 if (obj.data) {
-                    localStorage.setItem('hell_pizza_data', JSON.stringify(obj.data));
+                    localStorage.setItem('hellPizzaWeighingData', JSON.stringify(obj.data));
                 }
                 if (obj.staff && Array.isArray(obj.staff)) {
                     STAFF.length = 0;
@@ -1925,21 +2091,19 @@ function openDev() {
         }
 
         function devClearData() {
-            if (confirm('This will delete all weighing data and staff names, and return to the setup screen.\n\nAre you sure?')) {
-                if (confirm('This cannot be undone. Continue?')) {
-                    localStorage.removeItem('hellPizzaWeighingData');
-                    localStorage.removeItem('hell_staff_list');
-                    localStorage.removeItem('hell_last_reset');
-                    localStorage.removeItem('hell_last_reset_date');
-                    localStorage.removeItem('hell_pizza_archive');
-                    STAFF.length = 0;
-                    setupNames = [];
-                    closeDev();
-                    setupScreen.classList.add('active');
-                    staffScreen.classList.remove('active');
-                    pizzaScreen.classList.remove('active');
-                    renderSetupList();
-                }
+            if (confirm('This will delete all weighing data and staff names, and return to the setup screen. This cannot be undone.')) {
+                localStorage.removeItem('hellPizzaWeighingData');
+                localStorage.removeItem('hell_staff_list');
+                localStorage.removeItem('hell_last_reset');
+                localStorage.removeItem('hell_last_reset_date');
+                localStorage.removeItem('hell_pizza_archive');
+                STAFF.length = 0;
+                setupNames = [];
+                closeDev();
+                setupScreen.classList.add('active');
+                staffScreen.classList.remove('active');
+                pizzaScreen.classList.remove('active');
+                renderSetupList();
             }
         }
 
@@ -1991,10 +2155,21 @@ function openDev() {
         function renderDevStaffList() {
             const list = document.getElementById('devStaffList');
             list.innerHTML = '';
-            STAFF.forEach((name, i) => {
+            const sorted = [...STAFF].sort((a, b) => a.localeCompare(b));
+            sorted.forEach(name => {
+                const realIndex = STAFF.indexOf(name);
                 const item = document.createElement('div');
                 item.className = 'dev-staff-item';
-                item.innerHTML = `<span>${name}</span><button class="dev-remove-btn" onclick="devRemoveStaff(${i})">Remove</button>`;
+                const thumb = STAFF_PHOTOS[name]
+                    ? `<img class="dev-staff-thumb" src="${STAFF_PHOTOS[name]}" alt="">`
+                    : '';
+                const photoBtn = STAFF_PHOTOS[name]
+                    ? `<button class="dev-photo-btn" onclick="captureStaffPhoto('${name}')">Retake</button><button class="dev-photo-btn" style="border-color:#ff4444;color:#ff4444;" onclick="removeStaffPhoto('${name}')">Remove Photo</button>`
+                    : `<button class="dev-photo-btn" onclick="captureStaffPhoto('${name}')">Add Photo</button>`;
+                item.innerHTML = `
+                    <span style="display:flex;align-items:center;">${thumb}${name}</span>
+                    <span style="display:flex;gap:4px;align-items:center;">${photoBtn}<button class="dev-remove-btn" onclick="devRemoveStaff(${realIndex})">Remove</button></span>
+                `;
                 list.appendChild(item);
             });
         }
@@ -2016,6 +2191,8 @@ function openDev() {
             if (!confirm(`Remove "${name}" from the staff list?\n\nTheir weighing data will be kept.`)) return;
             STAFF.splice(index, 1);
             saveStaffList();
+            delete STAFF_PHOTOS[name];
+            saveStaffPhotos();
             renderDevStaffList();
             refreshStaffButtons();
         }
@@ -2023,11 +2200,19 @@ function openDev() {
         function refreshStaffButtons() {
             const grid = document.querySelector('.staff-grid');
             grid.innerHTML = '';
+            if (STAFF.length === 0) {
+                grid.innerHTML = '<p style="color:#444;font-family:Roboto,sans-serif;font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;text-align:center;padding:40px 0;">No staff set up — open Settings to add names.</p>';
+                return;
+            }
             STAFF.forEach(name => {
                 const btn = document.createElement('button');
                 btn.className = 'staff-btn';
                 btn.dataset.staff = name;
                 btn.textContent = name;
+                if (STAFF_PHOTOS[name]) {
+                    btn.classList.add('has-photo');
+                    btn.style.backgroundImage = `url(${STAFF_PHOTOS[name]})`;
+                }
                 btn.addEventListener('click', () => selectStaff(name));
                 grid.appendChild(btn);
             });
