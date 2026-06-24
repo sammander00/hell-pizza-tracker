@@ -1042,7 +1042,7 @@
         <!-- Header -->
         <header class="header">
             <div style="text-align:right;">
-                <button onclick="openDev()" style="background:transparent;border:1px solid #222;color:#333;padding:6px 14px;font-family:'Roboto',sans-serif;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;">⚙ Menu</button>
+                <button onclick="openDev()" style="background:transparent;border:1px solid #FE0000;color:#FE0000;padding:6px 14px;font-family:'Roboto',sans-serif;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;">Settings</button>
             </div>
         </header>
     </div>
@@ -1054,7 +1054,7 @@
 
             <!-- PIN Screen -->
             <div id="devPinScreen" class="dev-pin-screen">
-                <div class="dev-title">🔒 Dev Menu</div>
+                <div class="dev-title">Settings</div>
                 <div class="dev-pin-display" id="devPinDisplay">_ _ _ _</div>
                 <div class="dev-pin-grid">
                     <button class="dev-pin-btn" onclick="devPinPress('1')">1</button>
@@ -1070,46 +1070,55 @@
                     <button class="dev-pin-btn" onclick="devPinPress('0')">0</button>
                     <button class="dev-pin-btn" onclick="devPinPress('clear')">C</button>
                 </div>
-                <p style="color:#555;font-size:0.75rem;margin-top:20px;">Enter PIN to continue</p>
+                <p style="color:#555;font-size:0.75rem;margin-top:20px;letter-spacing:1px;text-transform:uppercase;">Enter PIN to continue</p>
             </div>
 
-            <!-- Main Dev Menu (hidden until PIN correct) -->
+            <!-- Main Settings Menu (hidden until PIN correct) -->
             <div id="devMenuMain" style="display:none;">
-                <div class="dev-title">⚙️ Dev Menu</div>
-
-                <!-- Data Backup -->
-                <div class="dev-section">
-                    <div class="dev-section-title">📦 Data Backup</div>
-                    <button class="dev-btn" onclick="devExportData()">Export Data (Copy to Clipboard)</button>
-                    <button class="dev-btn secondary" onclick="devImportData()">Import / Restore Data</button>
-                    <button class="dev-btn danger" onclick="devClearData()">⚠️ Clear All Data</button>
-                </div>
+                <div class="dev-title">Settings</div>
 
                 <!-- Staff Management -->
                 <div class="dev-section">
-                    <div class="dev-section-title">👤 Staff Management</div>
+                    <div class="dev-section-title">Staff</div>
                     <div class="dev-staff-list" id="devStaffList"></div>
                     <div style="display:flex;gap:10px;">
-                        <input class="dev-input" id="devNewStaffInput" placeholder="New staff name..."
-                            style="margin-bottom:0;" />
-                        <button class="dev-btn" style="width:auto;white-space:nowrap;margin-bottom:0;"
-                            onclick="devAddStaff()">Add</button>
+                        <input class="dev-input" id="devNewStaffInput" placeholder="New staff name..." style="margin-bottom:0;" />
+                        <button class="dev-btn" style="width:auto;white-space:nowrap;margin-bottom:0;" onclick="devAddStaff()">Add</button>
+                    </div>
+                </div>
+
+                <!-- Google Sheets -->
+                <div class="dev-section">
+                    <div class="dev-section-title">Google Sheets</div>
+                    <p style="font-size:0.75rem;color:#666;margin-bottom:12px;line-height:1.5;">
+                        Paste your Google Apps Script URL below to sync weighing data to a Google Sheet.
+                        To set this up, go to your Google Sheet, open Extensions &rarr; Apps Script, deploy as a web app, and copy the URL here.
+                    </p>
+                    <div id="devSheetsStatus" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;color:#555;">Not connected</div>
+                    <input class="dev-input" id="devSheetsUrlInput" placeholder="Paste Apps Script URL..." />
+                    <div style="display:flex;gap:10px;">
+                        <button class="dev-btn" style="margin-bottom:0;" onclick="devSaveSheetsUrl()">Save & Connect</button>
+                        <button class="dev-btn secondary" style="width:auto;white-space:nowrap;margin-bottom:0;" onclick="devTestSheets()">Test</button>
                     </div>
                 </div>
 
                 <!-- Edit Totals -->
                 <div class="dev-section">
-                    <div class="dev-section-title">📊 Edit Weighing Totals</div>
-                    <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Adjust counts without changing the
-                        'Last Weighed' date tracking.</p>
+                    <div class="dev-section-title">Edit Weighing Totals</div>
+                    <p style="font-size:0.75rem;color:#666;margin-bottom:10px;">Adjust counts without changing the last weighed date.</p>
                     <select class="dev-input" id="devTotalsStaffSelect" onchange="renderDevTotalsList()">
-                        <option value="">Select Staff...</option>
+                        <option value="">Select staff member...</option>
                     </select>
-                    <div id="devTotalsList"
-                        style="max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid #222; padding: 5px;">
-                    </div>
-                    <button class="dev-btn" id="devSaveTotalsBtn" style="display:none; margin-top: 10px;"
-                        onclick="devSaveTotals()">Save New Totals</button>
+                    <div id="devTotalsList" style="max-height:250px;overflow-y:auto;margin-top:10px;border:1px solid #222;padding:5px;"></div>
+                    <button class="dev-btn" id="devSaveTotalsBtn" style="display:none;margin-top:10px;" onclick="devSaveTotals()">Save Totals</button>
+                </div>
+
+                <!-- Data -->
+                <div class="dev-section">
+                    <div class="dev-section-title">Data</div>
+                    <button class="dev-btn" onclick="devExportData()">Export Backup to Clipboard</button>
+                    <button class="dev-btn secondary" onclick="devImportData()">Restore from Backup</button>
+                    <button class="dev-btn danger" onclick="devClearData()">Clear All Data</button>
                 </div>
 
                 <button class="dev-btn secondary" onclick="closeDev()">Close</button>
@@ -1273,7 +1282,7 @@
 
             // Send payload
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', GOOGLE_SHEETS_WEBHOOK_URL, true);
+            xhr.open('POST', getSheetsUrl(), true);
             xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
 
             xhr.onload = function () {
@@ -1867,6 +1876,7 @@ function openDev() {
                     document.getElementById('devPinScreen').style.display = 'none';
                     document.getElementById('devMenuMain').style.display = 'block';
                     renderDevStaffList();
+                    updateSheetsStatus();
                 } else {
                     document.getElementById('devPinDisplay').textContent = '✕ Wrong PIN';
                     setTimeout(() => {
@@ -1915,12 +1925,66 @@ function openDev() {
         }
 
         function devClearData() {
-            if (confirm('⚠️ This will DELETE all weighing data for all staff.\n\nAre you sure?')) {
-                if (confirm('Really sure? This cannot be undone.')) {
-                    localStorage.removeItem('hell_pizza_data');
-                    alert('All data cleared.');
-                    location.reload();
+            if (confirm('This will delete all weighing data and staff names, and return to the setup screen.\n\nAre you sure?')) {
+                if (confirm('This cannot be undone. Continue?')) {
+                    localStorage.removeItem('hellPizzaWeighingData');
+                    localStorage.removeItem('hell_staff_list');
+                    localStorage.removeItem('hell_last_reset');
+                    localStorage.removeItem('hell_last_reset_date');
+                    localStorage.removeItem('hell_pizza_archive');
+                    STAFF.length = 0;
+                    setupNames = [];
+                    closeDev();
+                    setupScreen.classList.add('active');
+                    staffScreen.classList.remove('active');
+                    pizzaScreen.classList.remove('active');
+                    renderSetupList();
                 }
+            }
+        }
+
+        // ===== GOOGLE SHEETS URL MANAGEMENT =====
+        const SHEETS_URL_KEY = 'hell_sheets_url';
+
+        function getSheetsUrl() {
+            return localStorage.getItem(SHEETS_URL_KEY) || GOOGLE_SHEETS_WEBHOOK_URL;
+        }
+
+        function devSaveSheetsUrl() {
+            const input = document.getElementById('devSheetsUrlInput');
+            const url = input.value.trim();
+            if (!url) { alert('Please paste a URL first.'); return; }
+            if (!url.startsWith('https://')) { alert('That does not look like a valid URL.'); return; }
+            localStorage.setItem(SHEETS_URL_KEY, url);
+            input.value = '';
+            updateSheetsStatus();
+            alert('Connected. Sync will now use this URL.');
+        }
+
+        function devTestSheets() {
+            const url = getSheetsUrl();
+            if (url === GOOGLE_SHEETS_WEBHOOK_URL && !localStorage.getItem(SHEETS_URL_KEY)) {
+                alert('No custom URL saved yet. Using the default built-in URL.');
+                return;
+            }
+            syncToGoogleSheets(false);
+            alert('Test sync sent. Check your Google Sheet in a few seconds.');
+        }
+
+        function updateSheetsStatus() {
+            const el = document.getElementById('devSheetsStatus');
+            if (!el) return;
+            const saved = localStorage.getItem(SHEETS_URL_KEY);
+            if (saved) {
+                const short = saved.length > 50 ? saved.substring(0, 50) + '...' : saved;
+                el.style.color = '#00FE00';
+                el.textContent = 'Connected: ' + short;
+            } else if (GOOGLE_SHEETS_WEBHOOK_URL) {
+                el.style.color = '#FFD700';
+                el.textContent = 'Using built-in default URL';
+            } else {
+                el.style.color = '#555';
+                el.textContent = 'Not connected';
             }
         }
 
