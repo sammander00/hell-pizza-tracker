@@ -35,14 +35,14 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px 15px;
+            padding: 8px 15px;
         }
 
         /* Header & Logo */
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 6px;
+            padding-bottom: 0;
         }
 
         .logo-img {
@@ -81,9 +81,8 @@
             font-family: 'Pirata One', cursive;
             font-size: 4rem;
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 24px;
             color: #FE0000;
-            /* --hell-red */
             line-height: 1;
         }
 
@@ -103,9 +102,9 @@
             border: 2px solid #FE0000;
             color: #FE0000;
             font-family: 'Pirata One', cursive;
-            font-size: 2.2rem;
-            width: 230px;
-            height: 230px;
+            font-size: 3rem;
+            width: 320px;
+            height: 320px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -220,6 +219,7 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 0;
+            padding-bottom: 100px;
         }
 
         .pizza-item {
@@ -605,7 +605,7 @@
 
             .screen-title {
                 font-size: 2.4rem;
-                margin-bottom: 24px;
+                margin-bottom: 10px;
                 letter-spacing: 3px;
             }
 
@@ -621,13 +621,13 @@
             }
 
             .staff-btn {
-                width: 160px;
-                height: 140px;
-                font-size: 1.5rem;
+                width: 220px;
+                height: 195px;
+                font-size: 2rem;
             }
 
             .staff-btn.has-photo {
-                font-size: 1.1rem;
+                font-size: 1.4rem;
             }
 
             /* ---- Pizza screen header ---- */
@@ -1243,7 +1243,7 @@
         <h2 class="screen-title">Select Name</h2>
         <div class="staff-grid" id="staffGrid"></div>
 
-        <p class="reset-info">Counts reset monthly &mdash; Last reset: <span id="lastResetDisplay">—</span></p>
+        <p class="reset-info">Next reset: <span id="nextResetDisplay">—</span></p>
         <div style="text-align:center;margin-top:14px;">
             <button class="history-view-btn" onclick="openHistory()">View Weigh History</button>
         </div>
@@ -1922,12 +1922,11 @@
         }
 
         function updateResetDisplay() {
-            const el = document.getElementById('lastResetDisplay');
+            const el = document.getElementById('nextResetDisplay');
             if (!el) return;
-            const raw = localStorage.getItem('hell_last_reset_date');
-            if (!raw) { el.textContent = 'Never'; return; }
-            const d = new Date(raw);
-            el.textContent = d.toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' });
+            const now = new Date();
+            const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            el.textContent = nextReset.toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' });
         }
 
         // ===== HISTORY OVERLAY =====
@@ -2024,6 +2023,7 @@ function openDev() {
         function closeDev() {
             document.getElementById('devOverlay').classList.remove('active');
             devPinEntry = '';
+            refreshStaffButtons();
         }
 
         function devPinPress(val) {
