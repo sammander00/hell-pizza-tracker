@@ -81,7 +81,7 @@
             font-family: 'Pirata One', cursive;
             font-size: 4rem;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 36px;
             color: #FE0000;
             line-height: 1;
         }
@@ -102,9 +102,9 @@
             border: 2px solid #FE0000;
             color: #FE0000;
             font-family: 'Pirata One', cursive;
-            font-size: 3rem;
-            width: 320px;
-            height: 320px;
+            font-size: 2.7rem;
+            width: 288px;
+            height: 288px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -128,7 +128,15 @@
             background-position: center;
             color: #fff;
             text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.7);
-            font-size: 1.6rem;
+            font-size: 1.45rem;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 14px;
+        }
+
+        .staff-btn-name {
+            position: relative;
+            z-index: 1;
         }
 
         .staff-btn.has-photo:hover {
@@ -605,7 +613,7 @@
 
             .screen-title {
                 font-size: 2.4rem;
-                margin-bottom: 10px;
+                margin-bottom: 18px;
                 letter-spacing: 3px;
             }
 
@@ -621,13 +629,13 @@
             }
 
             .staff-btn {
-                width: 220px;
-                height: 195px;
-                font-size: 2rem;
+                width: 198px;
+                height: 175px;
+                font-size: 1.8rem;
             }
 
             .staff-btn.has-photo {
-                font-size: 1.4rem;
+                font-size: 1.25rem;
             }
 
             /* ---- Pizza screen header ---- */
@@ -2208,10 +2216,15 @@ function openDev() {
                 const btn = document.createElement('button');
                 btn.className = 'staff-btn';
                 btn.dataset.staff = name;
-                btn.textContent = name;
                 if (STAFF_PHOTOS[name]) {
                     btn.classList.add('has-photo');
                     btn.style.backgroundImage = `url(${STAFF_PHOTOS[name]})`;
+                    const span = document.createElement('span');
+                    span.className = 'staff-btn-name';
+                    span.textContent = name;
+                    btn.appendChild(span);
+                } else {
+                    btn.textContent = name;
                 }
                 btn.addEventListener('click', () => selectStaff(name));
                 grid.appendChild(btn);
