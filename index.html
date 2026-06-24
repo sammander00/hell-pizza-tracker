@@ -1,0 +1,2002 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hell Pizza - Weighing Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111111">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        /* Hell Pizza Premium Redesign - Minimalist & Bold (Tablet Compatible) */
+        /* Replaced CSS variables with static values for legacy support */
+
+        @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=Roboto:wght@400;500;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            /* --hell-black */
+            color: #E1D8B7;
+            /* --hell-parchment */
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+
+        /* Header & Logo */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .logo-img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        .subtitle {
+            font-family: 'Pirata One', cursive;
+            font-size: 3rem;
+            color: #FE0000;
+            /* --hell-red */
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            margin-top: 5px;
+            opacity: 1;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .screen.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Typography Helpers */
+        .screen-title {
+            font-family: 'Pirata One', cursive;
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #FE0000;
+            /* --hell-red */
+            line-height: 1;
+        }
+
+        /* Staff Grid - Minimalist Cards */
+        .staff-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            padding: 0 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .staff-btn {
+            background: transparent;
+            border: 2px solid #FE0000;
+            color: #FE0000;
+            font-family: 'Pirata One', cursive;
+            font-size: 2.2rem;
+            width: 230px;
+            height: 230px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .staff-btn:hover {
+            background: #FE0000;
+            /* --hell-red */
+            border-color: #FE0000;
+            /* --hell-red */
+            color: #000000;
+            /* --hell-black */
+            transform: scale(1.05);
+        }
+
+        /* Pizza List Layout */
+        .pizza-header {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 50px;
+            border-bottom: 1px solid #E1D8B7;
+            padding-bottom: 20px;
+            min-height: 80px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #E1D8B7;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            padding-left: 0;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #FE0000;
+            /* --hell-red */
+        }
+
+        .current-staff {
+            font-family: 'Pirata One', cursive;
+            font-size: 4.5rem;
+            color: #E1D8B7;
+            text-align: center;
+        }
+
+        #currentStaffName {
+            color: #FE0000;
+            /* --hell-red */
+        }
+
+        /* Minimalist List Items */
+        .pizza-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .pizza-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            align-items: center;
+            padding: 22px 0;
+            border-bottom: 1px solid #222;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .pizza-item:hover {
+            background: #0a0a0a;
+        }
+
+        .pizza-name-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pizza-name {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            color: #E1D8B7;
+            letter-spacing: 1px;
+        }
+
+        .pizza-status {
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        /* Buttons */
+        .weigh-btn {
+            background: transparent;
+            border: 1px solid #FE0000;
+            color: #FE0000;
+            padding: 15px 40px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            min-width: 220px;
+            transition: all 0.2s;
+        }
+
+        .weigh-btn:hover {
+            background: #FE0000;
+            /* --hell-red */
+            color: #000000;
+            /* --hell-black */
+        }
+
+        .weigh-btn.weighed {
+            border: 1px solid #00FE00;
+            color: #00FE00;
+            background: rgba(0, 254, 0, 0.05);
+        }
+
+        /* Stale Pizza - Design Led (Border removed) */
+        /* .pizza-item.stale-pizza {} rule removed */
+
+        .pizza-item.stale-pizza .pizza-name {
+            color: #FE0000;
+            /* --hell-red */
+        }
+
+        .pizza-item.stale-pizza .pizza-status {
+            color: #FE0000;
+            /* --hell-red */
+            font-weight: bold;
+        }
+
+        .pizza-item.recent-pizza .pizza-name {
+            color: #FFD700;
+            /* Yellow */
+        }
+
+        .pizza-item.recent-pizza .pizza-status {
+            color: #FFD700;
+            /* Yellow */
+            font-weight: bold;
+        }
+
+        .pizza-item.weighed-today .pizza-name {
+            color: #00FE00;
+            font-weight: 900;
+        }
+
+        .pizza-item.weighed-today .pizza-status {
+            color: #00FE00;
+            font-weight: 900;
+        }
+
+        /* --- 2-Second Flame Burst Animation --- */
+        .fire-burst {
+            animation: fire-burst-kf 2s ease-out forwards;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes fire-burst-kf {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 0, 0);
+                background: rgba(255, 68, 0, 0.2);
+            }
+
+            15% {
+                box-shadow: 0 0 30px 15px rgba(255, 68, 0, 0.9), 0 0 50px 30px rgba(254, 0, 0, 0.7);
+                background: rgba(255, 68, 0, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 100px 50px rgba(255, 68, 0, 0), 0 0 150px 80px rgba(254, 0, 0, 0);
+                background: transparent;
+            }
+        }
+
+
+        .pizza-times {
+            font-size: 0.9rem;
+            color: #E1D8B7;
+            margin-top: 5px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(225, 216, 183, 0.4);
+        }
+
+        .pizza-item.stale-pizza::after {
+            content: '!';
+            position: absolute;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #000000;
+            /* --hell-black */
+            color: #FE0000;
+            /* --hell-red */
+            font-weight: bold;
+            font-size: 0.8rem;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #FE0000;
+            /* --hell-red */
+            border-radius: 50%;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #333;
+            text-align: center;
+        }
+
+        .leaderboard-title {
+            font-family: 'Pirata One', cursive;
+            font-size: 2.5rem;
+            color: #FE0000;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 35px;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .leaderboard-top {
+            border: 2px solid #FE0000;
+            background: #0f0000;
+            animation: fire-pulse 2s infinite alternate linear;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fire-pulse {
+            0% {
+                box-shadow: 0 0 15px rgba(254, 0, 0, 0.6), 0 0 5px rgba(255, 215, 0, 0.4);
+                border-color: #FE0000;
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(255, 94, 0, 0.8), 0 -5px 15px rgba(255, 215, 0, 0.6);
+                border-color: #ff5e00;
+                transform: scale(1.02);
+            }
+
+            100% {
+                box-shadow: 0 0 15px rgba(254, 0, 0, 0.6), 0 0 5px rgba(255, 215, 0, 0.4);
+                border-color: #FE0000;
+                transform: scale(1);
+            }
+        }
+
+
+        .leaderboard-rank {
+            font-weight: 900;
+            color: #FE0000;
+            width: 60px;
+            text-align: left;
+            font-size: 1.8rem;
+        }
+
+        .leaderboard-name {
+            flex-grow: 1;
+            text-align: left;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.8rem;
+        }
+
+        .leaderboard-count {
+            color: #FE0000;
+            font-weight: 900;
+            font-size: 2.2rem;
+        }
+
+        .leaderboard-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        /* ===== Setup Screen ===== */
+        .setup-screen {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .setup-intro {
+            text-align: center;
+            color: #E1D8B7;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            opacity: 0.7;
+        }
+
+        .setup-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setup-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #444;
+            color: #E1D8B7;
+            padding: 14px 16px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .setup-input:focus {
+            border-color: #FE0000;
+        }
+
+        .setup-add-btn {
+            background: transparent;
+            border: 1px solid #FE0000;
+            color: #FE0000;
+            padding: 14px 22px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .setup-add-btn:hover {
+            background: #FE0000;
+            color: #000;
+        }
+
+        .setup-names-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 30px;
+            min-height: 40px;
+        }
+
+        .setup-name-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border: 1px solid #222;
+            background: #0a0a0a;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #E1D8B7;
+        }
+
+        .setup-remove-btn {
+            background: transparent;
+            border: 1px solid #555;
+            color: #555;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .setup-remove-btn:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .setup-launch-btn {
+            width: 100%;
+            background: #FE0000;
+            border: none;
+            color: #000;
+            padding: 18px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .setup-launch-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .setup-launch-btn:not(:disabled):hover {
+            opacity: 0.85;
+        }
+
+        /* Tablet Optimization */
+        @media (max-width: 768px) {
+            .screen-title {
+                font-size: 2.2rem;
+                margin-bottom: 30px;
+            }
+
+            .staff-btn {
+                width: 150px;
+                height: 150px;
+                font-size: 1.5rem;
+            }
+
+            .staff-grid {
+                gap: 20px;
+            }
+
+            .pizza-item {
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto;
+                gap: 8px;
+                padding: 14px 0;
+            }
+
+            .pizza-name {
+                grid-column: 1 / -1;
+                font-size: 1.3rem;
+            }
+
+            .pizza-status {
+                text-align: left;
+                grid-column: 1;
+                padding-right: 0;
+            }
+
+            .weigh-btn {
+                grid-column: 2;
+                min-width: auto;
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .current-staff {
+                font-size: 2.8rem;
+            }
+
+            .subtitle {
+                font-size: 2rem;
+                letter-spacing: 3px;
+            }
+
+            .leaderboard-name, .leaderboard-count, .leaderboard-rank {
+                font-size: 1.2rem;
+            }
+
+            .leaderboard-item {
+                padding: 14px 18px;
+            }
+        }
+
+        /* --- Banner Removal Hack --- */
+        /* This targets common IDs and styles used by free hosts like Tiiny.host to inject banners */
+        #tiiny-host-banner,
+        .tiiny-host-banner,
+        div[style*="fixed"][style*="bottom: 0"],
+        div[style*="fixed"][style*="bottom:0"],
+        iframe[src*="tiiny.host"],
+        img[alt*="tiiny"],
+        a[href*="tiiny.host"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* --- Developer Menu --- */
+        .dev-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dev-overlay.active {
+            display: flex;
+        }
+
+        .dev-modal {
+            background: #0a0a0a;
+            border: 1px solid #FE0000;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .dev-title {
+            font-family: 'Pirata One', cursive;
+            color: #FE0000;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 3px;
+        }
+
+        .dev-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 20px;
+        }
+
+        .dev-section-title {
+            color: #E1D8B7;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .dev-btn {
+            background: transparent;
+            border: 1px solid #FE0000;
+            color: #FE0000;
+            padding: 10px 20px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .dev-btn:hover {
+            background: #FE0000;
+            color: #000;
+        }
+
+        .dev-btn.secondary {
+            border-color: #555;
+            color: #555;
+        }
+
+        .dev-btn.secondary:hover {
+            background: #555;
+            color: #000;
+        }
+
+        .dev-btn.danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .dev-btn.danger:hover {
+            background: #ff4444;
+            color: #000;
+        }
+
+        .dev-input {
+            background: #111;
+            border: 1px solid #333;
+            color: #E1D8B7;
+            padding: 10px;
+            width: 100%;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .dev-staff-list {
+            margin-bottom: 10px;
+        }
+
+        .dev-staff-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.9rem;
+        }
+
+        .dev-remove-btn {
+            background: transparent;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 3px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .dev-pin-screen {
+            text-align: center;
+        }
+
+        .dev-pin-display {
+            font-size: 2rem;
+            letter-spacing: 8px;
+            color: #FE0000;
+            margin: 20px 0;
+            min-height: 40px;
+        }
+
+        .dev-pin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        .dev-pin-btn {
+            background: #111;
+            border: 1px solid #333;
+            color: #E1D8B7;
+            padding: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.15s;
+        }
+
+        .dev-pin-btn:hover {
+            background: #222;
+        }
+
+        .dev-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* ===== Last Reset Info ===== */
+        .reset-info {
+            text-align: center;
+            margin-top: 18px;
+            margin-bottom: 0;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.75rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .reset-info span {
+            color: #666;
+        }
+
+        /* ===== History Overlay ===== */
+        .history-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 8888;
+            overflow-y: auto;
+            padding: 30px 20px 60px;
+        }
+
+        .history-overlay.active {
+            display: block;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .history-title {
+            font-family: 'Pirata One', cursive;
+            font-size: 2.5rem;
+            color: #FE0000;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .history-close {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: 1px solid #333;
+            color: #555;
+            font-size: 1.2rem;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .history-close:hover {
+            border-color: #FE0000;
+            color: #FE0000;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: #444;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 60px;
+        }
+
+        .history-period {
+            margin-bottom: 50px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .history-period-title {
+            font-family: 'Pirata One', cursive;
+            font-size: 1.8rem;
+            color: #E1D8B7;
+            border-bottom: 1px solid #222;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .history-period-meta {
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.7rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .history-staff-block {
+            margin-bottom: 24px;
+        }
+
+        .history-staff-name {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #FE0000;
+            margin-bottom: 10px;
+        }
+
+        .history-pizza-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-pizza-chip {
+            background: #0a0a0a;
+            border: 1px solid #1e1e1e;
+            padding: 6px 12px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.78rem;
+            color: #E1D8B7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-pizza-chip .chip-count {
+            background: #FE0000;
+            color: #000;
+            font-weight: 900;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .history-view-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            padding: 8px 18px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .history-view-btn:hover {
+            border-color: #E1D8B7;
+            color: #E1D8B7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <!-- Invisible dev menu trigger - tap 5x to open -->
+            <div id="devLogoTrigger" style="width:100%;height:30px;cursor:default;"></div>
+        </header>
+    </div>
+
+    <!-- Developer Menu Overlay -->
+    <div class="dev-overlay" id="devOverlay">
+        <div class="dev-modal" style="position:relative;">
+            <button class="dev-close" onclick="closeDev()">✕</button>
+
+            <!-- PIN Screen -->
+            <div id="devPinScreen" class="dev-pin-screen">
+                <div class="dev-title">🔒 Dev Menu</div>
+                <div class="dev-pin-display" id="devPinDisplay">_ _ _ _</div>
+                <div class="dev-pin-grid">
+                    <button class="dev-pin-btn" onclick="devPinPress('1')">1</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('2')">2</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('3')">3</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('4')">4</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('5')">5</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('6')">6</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('7')">7</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('8')">8</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('9')">9</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('back')">⌫</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('0')">0</button>
+                    <button class="dev-pin-btn" onclick="devPinPress('clear')">C</button>
+                </div>
+                <p style="color:#555;font-size:0.75rem;margin-top:20px;">Enter PIN to continue</p>
+            </div>
+
+            <!-- Main Dev Menu (hidden until PIN correct) -->
+            <div id="devMenuMain" style="display:none;">
+                <div class="dev-title">⚙️ Dev Menu</div>
+
+                <!-- Data Backup -->
+                <div class="dev-section">
+                    <div class="dev-section-title">📦 Data Backup</div>
+                    <button class="dev-btn" onclick="devExportData()">Export Data (Copy to Clipboard)</button>
+                    <button class="dev-btn secondary" onclick="devImportData()">Import / Restore Data</button>
+                    <button class="dev-btn danger" onclick="devClearData()">⚠️ Clear All Data</button>
+                </div>
+
+                <!-- Staff Management -->
+                <div class="dev-section">
+                    <div class="dev-section-title">👤 Staff Management</div>
+                    <div class="dev-staff-list" id="devStaffList"></div>
+                    <div style="display:flex;gap:10px;">
+                        <input class="dev-input" id="devNewStaffInput" placeholder="New staff name..."
+                            style="margin-bottom:0;" />
+                        <button class="dev-btn" style="width:auto;white-space:nowrap;margin-bottom:0;"
+                            onclick="devAddStaff()">Add</button>
+                    </div>
+                </div>
+
+                <!-- Edit Totals -->
+                <div class="dev-section">
+                    <div class="dev-section-title">📊 Edit Weighing Totals</div>
+                    <p style="font-size: 0.75rem; color: #666; margin-bottom: 10px;">Adjust counts without changing the
+                        'Last Weighed' date tracking.</p>
+                    <select class="dev-input" id="devTotalsStaffSelect" onchange="renderDevTotalsList()">
+                        <option value="">Select Staff...</option>
+                    </select>
+                    <div id="devTotalsList"
+                        style="max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid #222; padding: 5px;">
+                    </div>
+                    <button class="dev-btn" id="devSaveTotalsBtn" style="display:none; margin-top: 10px;"
+                        onclick="devSaveTotals()">Save New Totals</button>
+                </div>
+
+                <button class="dev-btn secondary" onclick="closeDev()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- First-Launch Setup Screen -->
+    <div id="setupScreen" class="screen active">
+        <div class="setup-screen">
+            <h2 class="screen-title">Setup Staff</h2>
+            <p class="setup-intro">Enter the names of staff members for this tablet. You can add or remove names later through the dev menu.</p>
+            <div class="setup-input-row">
+                <input class="setup-input" id="setupNameInput" placeholder="Staff name..." maxlength="30" />
+                <button class="setup-add-btn" onclick="setupAddName()">Add</button>
+            </div>
+            <div class="setup-names-list" id="setupNamesList"></div>
+            <button class="setup-launch-btn" id="setupLaunchBtn" onclick="setupLaunch()" disabled>Launch App</button>
+        </div>
+    </div>
+
+    <!-- History Overlay -->
+    <div class="history-overlay" id="historyOverlay">
+        <div class="history-header">
+            <h2 class="history-title">Weigh History</h2>
+            <button class="history-close" onclick="closeHistory()">✕ Close</button>
+        </div>
+        <div id="historyContent"></div>
+    </div>
+
+    <!-- Staff Selection Screen -->
+    <div id="staffScreen" class="screen">
+        <h2 class="screen-title">Select Name</h2>
+        <div class="staff-grid" id="staffGrid"></div>
+
+        <p class="reset-info">Counts reset monthly &mdash; Last reset: <span id="lastResetDisplay">—</span></p>
+        <div style="text-align:center;margin-top:14px;">
+            <button class="history-view-btn" onclick="openHistory()">View Weigh History</button>
+        </div>
+
+        <!-- Leaderboard Section -->
+        <div class="leaderboard-section">
+            <h3 class="leaderboard-title">Top Pizza Weighers</h3>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <!-- Pizza Weighing Screen -->
+    <div id="pizzaScreen" class="screen">
+        <div class="pizza-header">
+            <button id="backBtn" class="back-btn">Back to Staff</button>
+            <h2 class="current-staff">Staff: <span id="currentStaffName"></span></h2>
+        </div>
+
+        <div class="pizza-list" id="pizzaList">
+            <!-- Pizza items will be generated by JavaScript -->
+        </div>
+    </div>
+    </div>
+
+    <!-- Inlined Application Logic -->
+    <script>
+        // Hell Pizza Weighing Tracker App
+
+        // ===== REMOTE CONFIG =====
+        // Edit pizza list and scheduled pizzas by updating config.json on GitHub.
+        // Each tablet fetches this on startup; staff/counts stay per-tablet in localStorage.
+        const REMOTE_CONFIG_URL = './config.json';
+        const CONFIG_CACHE_KEY = 'hell_remote_config';
+
+        const CONFIG_DEFAULTS = {
+            pizzas: [
+                'Beast', 'Brimstone', 'Buffalo', 'Burger Pizza', 'Cursed', 'Damned',
+                'Death By Chicken', 'Envy', 'Gluttony', 'Greed', 'Grimm', 'Limbo',
+                'Lust/Deluxe', 'Mayhem', 'Mischief', 'Mordor', 'Morning After', 'Pandemonium',
+                'Pride', 'Purgatory', 'Serpent', 'Sinister', 'Trouble', 'Unearthly', 'Wrath'
+            ],
+            scheduledPizzas: [
+                { name: 'Peoples Pizza', releaseDate: '2026-02-27T10:00:00+13:00' }
+            ]
+        };
+
+        let APP_CONFIG = Object.assign({}, CONFIG_DEFAULTS);
+
+        async function loadRemoteConfig() {
+            // Apply cached config immediately so rendering isn't blocked
+            const cached = localStorage.getItem(CONFIG_CACHE_KEY);
+            if (cached) {
+                try { APP_CONFIG = JSON.parse(cached); }
+                catch (e) { APP_CONFIG = Object.assign({}, CONFIG_DEFAULTS); }
+            }
+            // Fetch fresh config in background with a 5-second timeout
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(REMOTE_CONFIG_URL + '?cb=' + Date.now(), {
+                    signal: controller.signal, cache: 'no-store'
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const fresh = await response.json();
+                APP_CONFIG = fresh;
+                localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(fresh));
+                console.log('✅ Remote config loaded v' + (fresh.version || '?'));
+                // Re-render pizza list if already on screen
+                if (document.querySelector('.pizza-item')) renderPizzaList();
+            } catch (e) {
+                console.warn('⚠️ Remote config unavailable — using cache/defaults:', e.message);
+            }
+        }
+
+        // Get all currently available pizzas from remote config (falls back to defaults)
+        function getActivePizzas() {
+            const basePizzas = APP_CONFIG.pizzas || CONFIG_DEFAULTS.pizzas;
+            const scheduled = APP_CONFIG.scheduledPizzas || CONFIG_DEFAULTS.scheduledPizzas;
+            const now = new Date();
+            const releasedPizzas = scheduled
+                .filter(p => new Date(p.releaseDate) <= now)
+                .map(p => p.name);
+            return [...basePizzas, ...releasedPizzas].sort();
+        }
+
+        // ===== GOOGLE SHEETS SYNC CONFIG =====
+        const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx-VRjPjFI1zn26kp2_SYdgWesVz2mtfPr0pPR41BJPMwsLjHrmDAPMK4ZNPiw0tJik/exec';
+        const BACKGROUND_SYNC_INTERVAL = 20 * 60 * 1000; // 20 minutes
+
+        // Start background sync
+        setInterval(() => {
+            console.log('⏰ Background sync triggered');
+            syncToGoogleSheets(true);
+        }, BACKGROUND_SYNC_INTERVAL);
+
+        // Sync to Google Sheets
+        function syncToGoogleSheets(silent) {
+            const data = loadData();
+            const records = [];
+
+            for (const staffName in data) {
+                if (data.hasOwnProperty(staffName)) {
+                    for (const pizzaName in data[staffName]) {
+                        const entry = data[staffName][pizzaName];
+                        let history = [];
+
+                        if (Array.isArray(entry)) {
+                            history = entry;
+                        } else if (entry) {
+                            history = [entry];
+                        }
+
+                        history.forEach(weighedDate => {
+                            records.push({
+                                staff: staffName,
+                                pizza: pizzaName,
+                                date: weighedDate,
+                                daysAgo: calculateDaysAgo(weighedDate)
+                            });
+                        });
+                    }
+                }
+            }
+
+            // Send payload
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', GOOGLE_SHEETS_WEBHOOK_URL, true);
+            xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+
+            xhr.onload = function () {
+                if (xhr.status === 200 || xhr.status === 302) {
+                    if (!silent) console.log('✅ Synced to Google Sheets');
+                } else {
+                    if (!silent) console.log('❌ Error syncing to Google Sheets');
+                }
+            };
+
+            // Fire and forget mostly
+            xhr.send(JSON.stringify({ records: records }));
+        }
+
+        function calculateDaysAgo(dateString) {
+            const weighedDate = new Date(dateString);
+            const today = new Date();
+            weighedDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            const diffTime = today - weighedDate;
+            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // Staff list - loaded from localStorage so dev menu changes persist
+        let STAFF = JSON.parse(localStorage.getItem('hell_staff_list') || 'null');
+        const isFirstLaunch = !STAFF;
+        if (!STAFF) STAFF = [];
+
+        function saveStaffList() {
+            localStorage.setItem('hell_staff_list', JSON.stringify(STAFF));
+        }
+
+        // Current state
+        let currentStaff = null;
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setupScreen');
+        const staffScreen = document.getElementById('staffScreen');
+        const pizzaScreen = document.getElementById('pizzaScreen');
+        const currentStaffName = document.getElementById('currentStaffName');
+        const pizzaList = document.getElementById('pizzaList');
+        const backBtn = document.getElementById('backBtn');
+
+        // ===== SETUP SCREEN =====
+        let setupNames = [];
+
+        function setupAddName() {
+            const input = document.getElementById('setupNameInput');
+            const name = input.value.trim();
+            if (!name) return;
+            if (setupNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+                alert('That name is already in the list.');
+                return;
+            }
+            setupNames.push(name);
+            input.value = '';
+            input.focus();
+            renderSetupList();
+        }
+
+        function renderSetupList() {
+            const list = document.getElementById('setupNamesList');
+            list.innerHTML = '';
+            setupNames.forEach((name, i) => {
+                const item = document.createElement('div');
+                item.className = 'setup-name-item';
+                item.innerHTML = `<span>${name}</span><button class="setup-remove-btn" onclick="setupRemoveName(${i})">Remove</button>`;
+                list.appendChild(item);
+            });
+            document.getElementById('setupLaunchBtn').disabled = setupNames.length === 0;
+        }
+
+        function setupRemoveName(i) {
+            setupNames.splice(i, 1);
+            renderSetupList();
+        }
+
+        function setupLaunch() {
+            if (setupNames.length === 0) return;
+            STAFF.length = 0;
+            setupNames.forEach(n => STAFF.push(n));
+            saveStaffList();
+            showStaffScreen();
+        }
+
+        // Initialize app
+        async function init() {
+            await loadRemoteConfig();
+            // Register Service Worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker
+                    .register('./sw.js')
+                    .then(() => { console.log('Service Worker Registered'); })
+                    .catch((err) => { console.log('SW Registration Failed'); });
+            }
+
+            // Keep Screen On (Wake Lock)
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen')
+                    .then(() => console.log('Screen Wake Lock Active'))
+                    .catch((err) => console.log('Wake Lock Error:', err));
+
+                document.addEventListener('visibilitychange', async () => {
+                    if (document.visibilityState === 'visible' && 'wakeLock' in navigator) {
+                        try { await navigator.wakeLock.request('screen'); }
+                        catch (e) { }
+                    }
+                });
+            }
+
+            // Allow pressing Enter to add a name on the setup screen
+            document.getElementById('setupNameInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') setupAddName();
+            });
+
+            setupBackButton();
+            checkMonthlyReset();
+
+            if (isFirstLaunch) {
+                // Show setup screen (already active by default)
+            } else {
+                refreshStaffButtons();
+                updateLeaderboard();
+                showStaffScreen();
+            }
+        }
+
+        // Update the leaderboard display
+        function updateLeaderboard() {
+            const data = loadData();
+            const counts = [];
+
+            // Calculate totals for each staff member
+            STAFF.forEach(staffName => {
+                let total = 0;
+                if (data[staffName]) {
+                    for (const pizza in data[staffName]) {
+                        const entry = data[staffName][pizza];
+                        if (Array.isArray(entry)) {
+                            total += entry.length;
+                        } else if (entry) {
+                            total += 1;
+                        }
+                    }
+                }
+                counts.push({ name: staffName, count: total });
+            });
+
+            // Sort by count descending
+            counts.sort((a, b) => b.count - a.count);
+
+            // Render to DOM
+            const leaderboardContainer = document.getElementById('leaderboardList');
+            if (leaderboardContainer) {
+                leaderboardContainer.innerHTML = '';
+                counts.forEach((item, index) => {
+                    const el = document.createElement('div');
+                    const isTop = index === 0 && item.count > 0;
+                    el.className = 'leaderboard-item' + (isTop ? ' leaderboard-top' : '');
+                    el.innerHTML = `
+                        <span class="leaderboard-rank">${isTop ? '😈' : '#' + (index + 1)}</span>
+                        <span class="leaderboard-name" style="${isTop ? 'color:#FE0000;font-weight:900;' : ''}">${item.name}${isTop ? ' 👑' : ''}</span>
+                        <span class="leaderboard-count">${item.count}<span class="leaderboard-label">PIZZAS</span></span>
+                    `;
+                    leaderboardContainer.appendChild(el);
+                });
+            }
+        }
+
+        // Setup back button
+        function setupBackButton() {
+            backBtn.addEventListener('click', () => {
+                showStaffScreen();
+            });
+        }
+
+        // Select a staff member
+        function selectStaff(staffName) {
+            currentStaff = staffName;
+            currentStaffName.textContent = staffName;
+            renderPizzaList();
+            showPizzaScreen();
+        }
+
+        // Render the pizza list for current staff
+        function renderPizzaList() {
+            pizzaList.innerHTML = '';
+
+            const activePizzas = getActivePizzas();
+            activePizzas.forEach(pizza => {
+                const pizzaItem = createPizzaItem(pizza);
+                pizzaList.appendChild(pizzaItem);
+            });
+        }
+
+        // Create a pizza item element
+        function createPizzaItem(pizzaName) {
+            const item = document.createElement('div');
+            item.className = 'pizza-item';
+
+            const nameWrapper = document.createElement('div');
+            nameWrapper.className = 'pizza-name-wrapper';
+
+            const name = document.createElement('div');
+            name.className = 'pizza-name';
+            name.textContent = pizzaName;
+
+            const count = getWeighedCount(currentStaff, pizzaName);
+            const countDisplay = document.createElement('div');
+            countDisplay.className = 'pizza-times';
+            countDisplay.textContent = `Weighed: ${count} times`;
+
+            nameWrapper.appendChild(name);
+            nameWrapper.appendChild(countDisplay);
+
+            const status = document.createElement('div');
+            status.className = 'pizza-status';
+
+            const lastWeighed = getLastWeighed(currentStaff, pizzaName);
+            status.textContent = formatLastWeighed(lastWeighed);
+
+            const button = document.createElement('button');
+            button.className = 'weigh-btn';
+
+            if (lastWeighed && isToday(lastWeighed, pizzaName)) {
+                button.textContent = 'Undo Today';
+                button.classList.add('weighed');
+                item.classList.add('weighed-today');
+            } else {
+                button.textContent = 'Mark as Weighed';
+
+                // Check highlight logic
+                if (isStale(lastWeighed)) {
+                    item.classList.add('stale-pizza');
+                } else if (isRecent(lastWeighed)) {
+                    item.classList.add('recent-pizza');
+                }
+            }
+
+            button.addEventListener('click', () => {
+                const isMarkingWeighed = button.textContent === 'Mark as Weighed';
+                toggleWeighed(currentStaff, pizzaName);
+                renderPizzaList();
+
+                // If we just marked it as weighed, trigger the burst on the new button
+                if (isMarkingWeighed) {
+                    const newButtons = document.querySelectorAll('.weigh-btn');
+                    newButtons.forEach(btn => {
+                        const row = btn.closest('.pizza-item');
+                        if (row.querySelector('.pizza-name').textContent === pizzaName) {
+                            btn.classList.add('fire-burst');
+                        }
+                    });
+                }
+            });
+
+            item.appendChild(nameWrapper);
+            item.appendChild(status);
+            item.appendChild(button);
+
+            return item;
+        }
+
+        // Get total count of times weighed
+        function getWeighedCount(staffName, pizzaName) {
+            const data = loadData();
+            if (data[staffName] && data[staffName][pizzaName]) {
+                const entry = data[staffName][pizzaName];
+                return Array.isArray(entry) ? entry.length : 1;
+            }
+            return 0;
+        }
+
+        // Get last weighed date for a staff member and pizza
+        function getLastWeighed(staffName, pizzaName) {
+            const data = loadData();
+            if (data[staffName] && data[staffName][pizzaName]) {
+                const entry = data[staffName][pizzaName];
+                if (Array.isArray(entry)) {
+                    return entry.length > 0 ? entry[entry.length - 1] : null;
+                }
+                return entry;
+            }
+            return null;
+        }
+
+        // Toggle weighed status (Mark as weighed / Undo)
+        function toggleWeighed(staffName, pizzaName) {
+            const data = loadData();
+            if (!data[staffName]) data[staffName] = {};
+
+            const now = new Date();
+            const nowISO = now.toISOString();
+            let history = data[staffName][pizzaName] || [];
+
+            // Normalize to array
+            if (!Array.isArray(history)) history = [history];
+
+            const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+
+            // Cooldown window: 2 minutes for Peoples Pizza, 8 hours for others
+            let isUndo = false;
+            if (lastEntry) {
+                const lastDate = new Date(lastEntry);
+                const diffMs = now - lastDate;
+                const cooldownMs = (pizzaName === "Peoples Pizza") ? (2 * 60 * 1000) : (8 * 60 * 60 * 1000);
+
+                if (diffMs < cooldownMs) {
+                    isUndo = true;
+                }
+            }
+
+            if (isUndo) {
+                history.pop();
+            } else {
+                history.push(nowISO);
+            }
+
+            // Save back
+            if (history.length > 0) {
+                data[staffName][pizzaName] = history;
+            } else {
+                delete data[staffName][pizzaName];
+            }
+
+            saveData(data);
+            updateLeaderboard();
+            setTimeout(() => syncToGoogleSheets(true), 1000);
+        }
+
+        // Format last weighed date for display
+        function formatLastWeighed(dateString) {
+            if (!dateString) return 'Never weighed';
+
+            const weighedDate = new Date(dateString);
+            const now = new Date();
+
+            // Compare local date strings (e.g. "2026-02-19") to respect the user's timezone
+            const localDateStr = weighedDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+            const todayStr = now.toLocaleDateString('en-CA');
+
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+
+            if (localDateStr === todayStr) {
+                return 'Weighed Today';
+            } else if (localDateStr === yesterdayStr) {
+                return 'Weighed Yesterday';
+            } else {
+                const diffDays = calculateDaysAgo(dateString);
+                if (diffDays < 7) {
+                    return 'Weighed ' + diffDays + ' days ago';
+                } else {
+                    return 'Weighed ' + localDateStr;
+                }
+            }
+        }
+
+        // Check if a pizza was weighed within its specific cooldown window
+        function isToday(dateString, pizzaName) {
+            if (!dateString) return false;
+            const now = new Date();
+            const weighedDate = new Date(dateString);
+            const diffMs = now - weighedDate;
+            const cooldownMs = (pizzaName === "Peoples Pizza") ? (2 * 60 * 1000) : (8 * 60 * 60 * 1000);
+            return diffMs < cooldownMs;
+        }
+
+        // Check if a pizza is considered "stale" (not weighed in > 7 days)
+        function isStale(dateString) {
+            if (!dateString) return true; // Never weighed is stale
+
+            const diffDays = calculateDaysAgo(dateString);
+            return diffDays > 7;
+        }
+
+        // Check if a pizza is "recent" (weighed within last 7 days but not today)
+        function isRecent(dateString) {
+            if (!dateString) return false;
+            const diffDays = calculateDaysAgo(dateString);
+            return diffDays > 0 && diffDays <= 7;
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const dataString = localStorage.getItem('hellPizzaWeighingData');
+            if (dataString) {
+                try {
+                    return JSON.parse(dataString);
+                } catch (e) {
+                    console.error('Error loading data:', e);
+                    return {};
+                }
+            }
+            return {};
+        }
+
+        // Save data to localStorage
+        function saveData(data) {
+            try {
+                localStorage.setItem('hellPizzaWeighingData', JSON.stringify(data));
+            } catch (e) {
+                console.error('Error saving data:', e);
+                alert('Error saving data. Please check browser storage settings.');
+            }
+        }
+
+        // Show staff selection screen
+        function showStaffScreen() {
+            setupScreen.classList.remove('active');
+            staffScreen.classList.add('active');
+            pizzaScreen.classList.remove('active');
+            refreshStaffButtons();
+            updateLeaderboard();
+            currentStaff = null;
+        }
+
+        // Show pizza weighing screen
+        function showPizzaScreen() {
+            staffScreen.classList.remove('active');
+            pizzaScreen.classList.add('active');
+        }
+
+        // ===== MONTHLY RESET & ARCHIVE =====
+
+        function checkMonthlyReset() {
+            const now = new Date();
+            const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const lastReset = localStorage.getItem('hell_last_reset');
+
+            if (lastReset !== currentPeriod) {
+                const currentData = loadData();
+                const hasData = Object.keys(currentData).some(s => Object.keys(currentData[s] || {}).length > 0);
+                if (hasData) {
+                    archivePeriod(lastReset || currentPeriod, currentData);
+                }
+                saveData({});
+                localStorage.setItem('hell_last_reset', currentPeriod);
+                localStorage.setItem('hell_last_reset_date', now.toISOString());
+            }
+
+            updateResetDisplay();
+        }
+
+        function archivePeriod(periodKey, data) {
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+            const [year, month] = periodKey.split('-');
+            const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long' });
+
+            const summary = {};
+            for (const staff in data) {
+                const staffData = data[staff] || {};
+                const staffSummary = {};
+                for (const pizza in staffData) {
+                    const entry = staffData[pizza];
+                    const count = Array.isArray(entry) ? entry.length : (entry ? 1 : 0);
+                    if (count > 0) staffSummary[pizza] = count;
+                }
+                if (Object.keys(staffSummary).length > 0) summary[staff] = staffSummary;
+            }
+
+            archive.unshift({
+                period: `${monthName} ${year}`,
+                periodKey,
+                archivedAt: new Date().toISOString(),
+                summary
+            });
+
+            localStorage.setItem('hell_pizza_archive', JSON.stringify(archive));
+        }
+
+        function updateResetDisplay() {
+            const el = document.getElementById('lastResetDisplay');
+            if (!el) return;
+            const raw = localStorage.getItem('hell_last_reset_date');
+            if (!raw) { el.textContent = 'Never'; return; }
+            const d = new Date(raw);
+            el.textContent = d.toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // ===== HISTORY OVERLAY =====
+
+        function openHistory() {
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+            const container = document.getElementById('historyContent');
+            container.innerHTML = '';
+
+            if (archive.length === 0) {
+                container.innerHTML = '<p class="history-empty">No history yet — records will appear here after the first monthly reset.</p>';
+            } else {
+                archive.forEach(entry => {
+                    const block = document.createElement('div');
+                    block.className = 'history-period';
+
+                    const archivedDate = new Date(entry.archivedAt).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+                    block.innerHTML = `
+                        <div class="history-period-title">
+                            <span>${entry.period}</span>
+                            <span class="history-period-meta">Archived ${archivedDate}</span>
+                        </div>
+                    `;
+
+                    const staffNames = Object.keys(entry.summary).sort();
+                    if (staffNames.length === 0) {
+                        block.innerHTML += '<p style="color:#444;font-size:0.8rem;font-family:Roboto,sans-serif;">No weighings recorded this period.</p>';
+                    } else {
+                        staffNames.forEach(staffName => {
+                            const pizzas = entry.summary[staffName];
+                            const staffBlock = document.createElement('div');
+                            staffBlock.className = 'history-staff-block';
+
+                            const total = Object.values(pizzas).reduce((a, b) => a + b, 0);
+                            staffBlock.innerHTML = `<div class="history-staff-name">${staffName} <span style="color:#555;font-weight:400;">&mdash; ${total} total</span></div>`;
+
+                            const grid = document.createElement('div');
+                            grid.className = 'history-pizza-grid';
+
+                            Object.entries(pizzas)
+                                .sort((a, b) => b[1] - a[1])
+                                .forEach(([pizza, count]) => {
+                                    const chip = document.createElement('div');
+                                    chip.className = 'history-pizza-chip';
+                                    chip.innerHTML = `<span class="chip-count">${count}</span><span>${pizza}</span>`;
+                                    grid.appendChild(chip);
+                                });
+
+                            staffBlock.appendChild(grid);
+                            block.appendChild(staffBlock);
+                        });
+                    }
+
+                    container.appendChild(block);
+                });
+            }
+
+            document.getElementById('historyOverlay').classList.add('active');
+        }
+
+        function closeHistory() {
+            document.getElementById('historyOverlay').classList.remove('active');
+        }
+
+        // Initialize the app when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+
+        // ===== DEVELOPER MENU =====
+        const DEV_PIN = '1337';
+        let devTapCount = 0;
+        let devTapTimer = null;
+        let devPinEntry = '';
+
+        // 5-tap logo trigger
+        document.getElementById('devLogoTrigger').addEventListener('click', () => {
+            devTapCount++;
+            clearTimeout(devTapTimer);
+            devTapTimer = setTimeout(() => { devTapCount = 0; }, 2000);
+            if (devTapCount >= 5) {
+                devTapCount = 0;
+                openDev();
+            }
+        });
+
+        function openDev() {
+            devPinEntry = '';
+            document.getElementById('devPinDisplay').textContent = '_ _ _ _';
+            document.getElementById('devPinScreen').style.display = 'block';
+            document.getElementById('devMenuMain').style.display = 'none';
+            document.getElementById('devOverlay').classList.add('active');
+
+            // Populate staff select in totals section
+            const select = document.getElementById('devTotalsStaffSelect');
+            select.innerHTML = '<option value="">Select Staff...</option>';
+            STAFF.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+            document.getElementById('devTotalsList').innerHTML = '';
+            document.getElementById('devSaveTotalsBtn').style.display = 'none';
+        }
+
+        function closeDev() {
+            document.getElementById('devOverlay').classList.remove('active');
+            devPinEntry = '';
+        }
+
+        function devPinPress(val) {
+            if (val === 'clear') { devPinEntry = ''; }
+            else if (val === 'back') { devPinEntry = devPinEntry.slice(0, -1); }
+            else if (devPinEntry.length < 4) { devPinEntry += val; }
+
+            // Update display
+            const dots = devPinEntry.split('').map(() => '●').join(' ');
+            const blanks = Array(4 - devPinEntry.length).fill('_').join(' ');
+            document.getElementById('devPinDisplay').textContent = (dots + (dots && blanks ? ' ' : '') + blanks).trim();
+
+            // Check PIN
+            if (devPinEntry.length === 4) {
+                if (devPinEntry === DEV_PIN) {
+                    document.getElementById('devPinScreen').style.display = 'none';
+                    document.getElementById('devMenuMain').style.display = 'block';
+                    renderDevStaffList();
+                } else {
+                    document.getElementById('devPinDisplay').textContent = '✕ Wrong PIN';
+                    setTimeout(() => {
+                        devPinEntry = '';
+                        document.getElementById('devPinDisplay').textContent = '_ _ _ _';
+                    }, 1000);
+                }
+            }
+        }
+
+        function devExportData() {
+            const data = loadData();
+            const exportObj = { staff: STAFF, data: data, exportedAt: new Date().toISOString() };
+            const json = JSON.stringify(exportObj, null, 2);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(json).then(() => alert('✅ Data copied to clipboard!\n\nPaste it into a text file to save it.'));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = json;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert('✅ Data copied to clipboard!');
+            }
+        }
+
+        function devImportData() {
+            const json = prompt('Paste your backup JSON here:');
+            if (!json) return;
+            try {
+                const obj = JSON.parse(json);
+                if (obj.data) {
+                    localStorage.setItem('hell_pizza_data', JSON.stringify(obj.data));
+                }
+                if (obj.staff && Array.isArray(obj.staff)) {
+                    STAFF.length = 0;
+                    obj.staff.forEach(s => STAFF.push(s));
+                    saveStaffList();
+                }
+                alert('✅ Data restored! Reloading app...');
+                location.reload();
+            } catch (e) {
+                alert('❌ Invalid JSON. Please check your backup and try again.');
+            }
+        }
+
+        function devClearData() {
+            if (confirm('⚠️ This will DELETE all weighing data for all staff.\n\nAre you sure?')) {
+                if (confirm('Really sure? This cannot be undone.')) {
+                    localStorage.removeItem('hell_pizza_data');
+                    alert('All data cleared.');
+                    location.reload();
+                }
+            }
+        }
+
+        function renderDevStaffList() {
+            const list = document.getElementById('devStaffList');
+            list.innerHTML = '';
+            STAFF.forEach((name, i) => {
+                const item = document.createElement('div');
+                item.className = 'dev-staff-item';
+                item.innerHTML = `<span>${name}</span><button class="dev-remove-btn" onclick="devRemoveStaff(${i})">Remove</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        function devAddStaff() {
+            const input = document.getElementById('devNewStaffInput');
+            const name = input.value.trim();
+            if (!name) return;
+            if (STAFF.includes(name)) { alert('That name already exists.'); return; }
+            STAFF.push(name);
+            saveStaffList();
+            input.value = '';
+            renderDevStaffList();
+            refreshStaffButtons();
+        }
+
+        function devRemoveStaff(index) {
+            const name = STAFF[index];
+            if (!confirm(`Remove "${name}" from the staff list?\n\nTheir weighing data will be kept.`)) return;
+            STAFF.splice(index, 1);
+            saveStaffList();
+            renderDevStaffList();
+            refreshStaffButtons();
+        }
+
+        function refreshStaffButtons() {
+            const grid = document.querySelector('.staff-grid');
+            grid.innerHTML = '';
+            STAFF.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'staff-btn';
+                btn.dataset.staff = name;
+                btn.textContent = name;
+                btn.addEventListener('click', () => {
+                    currentStaff = name;
+                    document.getElementById('currentStaffName').textContent = name;
+                    loadPizzaScreen(name);
+                    showPizzaScreen();
+                });
+                grid.appendChild(btn);
+            });
+        }
+
+        // ===== DEV TOTALS EDITOR =====
+        function renderDevTotalsList() {
+            const staffName = document.getElementById('devTotalsStaffSelect').value;
+            const list = document.getElementById('devTotalsList');
+            const saveBtn = document.getElementById('devSaveTotalsBtn');
+
+            if (!staffName) {
+                list.innerHTML = '';
+                saveBtn.style.display = 'none';
+                return;
+            }
+
+            const data = loadData();
+            const staffData = data[staffName] || {};
+
+            list.innerHTML = '';
+            const activePizzas = getActivePizzas();
+            activePizzas.forEach(pizza => {
+                const history = staffData[pizza] || [];
+                const count = Array.isArray(history) ? history.length : (history ? 1 : 0);
+
+                const item = document.createElement('div');
+                item.className = 'dev-staff-item';
+                item.style.padding = '5px 0';
+                item.innerHTML = `
+                    <span style="font-size:0.8rem;">${pizza}</span>
+                    <input type="number" class="dev-input dev-total-input" data-pizza="${pizza}" value="${count}" min="0" style="width:60px; margin-bottom:0; padding:4px;" />
+                `;
+                list.appendChild(item);
+            });
+            saveBtn.style.display = 'block';
+        }
+
+        function devSaveTotals() {
+            const staffName = document.getElementById('devTotalsStaffSelect').value;
+            if (!staffName) return;
+
+            const data = loadData();
+            if (!data[staffName]) data[staffName] = {};
+
+            const inputs = document.querySelectorAll('.dev-total-input');
+            let changes = 0;
+
+            const legacyDate = '2000-01-01'; // Use old date for legacy counts
+
+            inputs.forEach(input => {
+                const pizza = input.dataset.pizza;
+                const newCount = parseInt(input.value) || 0;
+
+                let history = data[staffName][pizza] || [];
+                if (!Array.isArray(history)) history = [history];
+
+                const currentCount = history.length;
+                const diff = newCount - currentCount;
+
+                if (diff > 0) {
+                    // Add legacy entries to the START of the array to not affect 'Last Weighed'
+                    for (let i = 0; i < diff; i++) {
+                        history.unshift(legacyDate);
+                    }
+                    data[staffName][pizza] = history;
+                    changes++;
+                } else if (diff < 0) {
+                    // Remove entries from the START of the array
+                    history.splice(0, Math.abs(diff));
+                    if (history.length > 0) {
+                        data[staffName][pizza] = history;
+                    } else {
+                        delete data[staffName][pizza];
+                    }
+                    changes++;
+                }
+            });
+
+            if (changes > 0) {
+                saveData(data);
+                updateLeaderboard();
+                alert(`✅ Updated ${changes} pizza totals for ${staffName}.`);
+            } else {
+                alert('No changes made.');
+            }
+        }
+    </script>
+</body>
+
+</html>

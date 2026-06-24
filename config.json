@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "pizzas": [
+    "Beast",
+    "Brimstone",
+    "Buffalo",
+    "Burger Pizza",
+    "Cursed",
+    "Damned",
+    "Death By Chicken",
+    "Envy",
+    "Gluttony",
+    "Greed",
+    "Grimm",
+    "Limbo",
+    "Lust/Deluxe",
+    "Mayhem",
+    "Mischief",
+    "Mordor",
+    "Morning After",
+    "Pandemonium",
+    "Pride",
+    "Purgatory",
+    "Serpent",
+    "Sinister",
+    "Trouble",
+    "Unearthly",
+    "Wrath"
+  ],
+  "scheduledPizzas": [
+    { "name": "Peoples Pizza", "releaseDate": "2026-02-27T10:00:00+13:00" }
+  ]
+}
