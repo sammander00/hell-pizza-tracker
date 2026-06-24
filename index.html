@@ -1904,12 +1904,7 @@
                 btn.className = 'staff-btn';
                 btn.dataset.staff = name;
                 btn.textContent = name;
-                btn.addEventListener('click', () => {
-                    currentStaff = name;
-                    document.getElementById('currentStaffName').textContent = name;
-                    loadPizzaScreen(name);
-                    showPizzaScreen();
-                });
+                btn.addEventListener('click', () => selectStaff(name));
                 grid.appendChild(btn);
             });
         }
