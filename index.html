@@ -2295,12 +2295,6 @@ function openDev() {
 
         function devClearData() {
             if (confirm('This will delete all weighing data and staff names, and return to the setup screen. This cannot be undone.')) {
-                // Fire a reset sync to Google Sheets before wiping localStorage
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', GOOGLE_SHEETS_WEBHOOK_URL, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.send(JSON.stringify({ reset: true, staff: [...STAFF] }));
-
                 localStorage.removeItem('hellPizzaWeighingData');
                 localStorage.removeItem('hell_staff_list');
                 localStorage.removeItem('hell_last_reset');
@@ -2308,6 +2302,10 @@ function openDev() {
                 localStorage.removeItem('hell_pizza_archive');
                 STAFF.length = 0;
                 setupNames = [];
+
+                // Sync empty data — Apps Script will see no staff and delete all stale sheets
+                syncToGoogleSheets(true);
+
                 closeDev();
                 setupScreen.classList.add('active');
                 staffScreen.classList.remove('active');
