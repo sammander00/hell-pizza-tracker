@@ -9,6 +9,24 @@ function doPost(e) {
 
   try {
     var payload            = JSON.parse(e.postData.contents);
+    var ss                 = SpreadsheetApp.getActiveSpreadsheet();
+
+    // ── Hard reset: delete all staff sheets and blank the Stats sheet ──────────
+    if (payload.reset) {
+      var allSheets = ss.getSheets();
+      for (var ri = 0; ri < allSheets.length; ri++) {
+        if (allSheets[ri].getName() !== 'Stats' && ss.getSheets().length > 1) {
+          ss.deleteSheet(allSheets[ri]);
+        }
+      }
+      var statsSheet = ss.getSheetByName('Stats');
+      if (!statsSheet) statsSheet = ss.insertSheet('Stats');
+      writeStatsSheet(statsSheet, [], {}, [], {}, {}, 0, []);
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     var records            = payload.records || [];
     var allStaff           = (payload.staff  && payload.staff.length  > 0) ? payload.staff  : null;
     var allPizzas          = (payload.pizzas && payload.pizzas.length > 0) ? payload.pizzas : null;
@@ -16,7 +34,6 @@ function doPost(e) {
     var allTimeTotal         = (typeof payload.allTimeTotal === 'number') ? payload.allTimeTotal : null;
     var allTimePerPizzaTotals = payload.allTimePerPizzaTotals || {};
     var monthlyBreakdown     = payload.monthlyBreakdown || [];
-    var ss                 = SpreadsheetApp.getActiveSpreadsheet();
 
     // Group records by staff → pizza → [dates]
     var byStaff = {};
