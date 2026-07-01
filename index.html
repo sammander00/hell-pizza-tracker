@@ -1712,6 +1712,13 @@
 
             setupBackButton();
             checkMonthlyReset();
+            // Re-check every 5 minutes so a tablet that's been left running rolls
+            // over to the new month on its own, without needing a manual reload.
+            setInterval(checkMonthlyReset, 5 * 60 * 1000);
+            // Also re-check whenever the tab becomes visible again (e.g. tablet wakes).
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) checkMonthlyReset();
+            });
             setupFullscreen();
 
             if (isFirstLaunch) {
@@ -2083,15 +2090,29 @@
             const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             const lastReset = localStorage.getItem('hell_last_reset');
 
+            // First run ever: just record the current period, nothing to archive.
+            if (!lastReset) {
+                localStorage.setItem('hell_last_reset', currentPeriod);
+                localStorage.setItem('hell_last_reset_date', now.toISOString());
+                updateResetDisplay();
+                return;
+            }
+
             if (lastReset !== currentPeriod) {
                 const currentData = loadData();
                 const hasData = Object.keys(currentData).some(s => Object.keys(currentData[s] || {}).length > 0);
                 if (hasData) {
-                    archivePeriod(lastReset || currentPeriod, currentData);
+                    // Archive the data under the month it actually belongs to (lastReset),
+                    // never the new current month.
+                    archivePeriod(lastReset, currentData);
                 }
                 saveData({});
                 localStorage.setItem('hell_last_reset', currentPeriod);
                 localStorage.setItem('hell_last_reset_date', now.toISOString());
+
+                // Refresh the on-screen leaderboards now that the month has rolled over.
+                if (typeof refreshStaffButtons === 'function') refreshStaffButtons();
+                if (typeof syncToGoogleSheets === 'function') syncToGoogleSheets(true);
             }
 
             updateResetDisplay();
