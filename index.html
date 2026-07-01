@@ -1215,6 +1215,7 @@
                     <div class="dev-section-title">Data</div>
                     <button class="dev-btn" onclick="devExportData()">Export Backup to Clipboard</button>
                     <button class="dev-btn secondary" onclick="devImportData()">Restore from Backup</button>
+                    <button class="dev-btn secondary" onclick="devFixArchiveMonths()">Fix Archive Months</button>
                     <button class="dev-btn danger" onclick="devClearData()">Clear All Data</button>
                 </div>
 
@@ -1340,6 +1341,17 @@
             return [...basePizzas, ...releasedPizzas].sort();
         }
 
+        // Archived per-pizza values may be a bare number (old format) or an
+        // object { count, lastDate } (new format). These read either safely.
+        function archCount(v) {
+            if (v && typeof v === 'object') return v.count || 0;
+            return v || 0;
+        }
+        function archLastDate(v) {
+            if (v && typeof v === 'object') return v.lastDate || null;
+            return null;
+        }
+
         function getAllTimeStaffTotals() {
             const totals = {};
             const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
@@ -1348,7 +1360,7 @@
                 for (const staff in summary) {
                     const pizzas = summary[staff];
                     let count = 0;
-                    for (const pizza in pizzas) count += (pizzas[pizza] || 0);
+                    for (const pizza in pizzas) count += archCount(pizzas[pizza]);
                     totals[staff] = (totals[staff] || 0) + count;
                 }
             }
@@ -1372,28 +1384,40 @@
             return sum;
         }
 
-        // Returns { staffName: { pizzaName: count } } — all-time counts from archive + current month
+        // Returns { staffName: { pizzaName: { count, lastDate } } } — all-time
+        // counts and the most recent weigh date, merged from archive + current month.
         function getAllTimePerPizzaTotals() {
             const totals = {};
+            function bump(staff, pizza, count, lastDate) {
+                if (!totals[staff]) totals[staff] = {};
+                if (!totals[staff][pizza]) totals[staff][pizza] = { count: 0, lastDate: null };
+                const slot = totals[staff][pizza];
+                slot.count += count;
+                if (lastDate && (!slot.lastDate || String(lastDate) > String(slot.lastDate))) {
+                    slot.lastDate = lastDate;
+                }
+            }
+
             const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
             for (let i = 0; i < archive.length; i++) {
                 const summary = archive[i].summary || {};
                 for (const staff in summary) {
-                    if (!totals[staff]) totals[staff] = {};
                     const pizzas = summary[staff];
                     for (const pizza in pizzas) {
-                        totals[staff][pizza] = (totals[staff][pizza] || 0) + (pizzas[pizza] || 0);
+                        bump(staff, pizza, archCount(pizzas[pizza]), archLastDate(pizzas[pizza]));
                     }
                 }
             }
             const current = loadData();
             for (const staff in current) {
-                if (!totals[staff]) totals[staff] = {};
                 const pizzas = current[staff] || {};
                 for (const pizza in pizzas) {
                     const entry = pizzas[pizza];
                     const count = Array.isArray(entry) ? entry.length : (entry ? 1 : 0);
-                    if (count > 0) totals[staff][pizza] = (totals[staff][pizza] || 0) + count;
+                    let lastDate = null;
+                    if (Array.isArray(entry) && entry.length) lastDate = entry.slice().sort().reverse()[0];
+                    else if (typeof entry === 'string') lastDate = entry;
+                    if (count > 0) bump(staff, pizza, count, lastDate);
                 }
             }
             return totals;
@@ -1412,12 +1436,15 @@
                 for (const staff in summary) {
                     const pizzas = summary[staff];
                     let count = 0;
-                    for (const pizza in pizzas) count += (pizzas[pizza] || 0);
+                    for (const pizza in pizzas) count += archCount(pizzas[pizza]);
                     if (count > 0) staffCounts.push({ name: staff, count });
                     storeTotal += count;
                 }
                 staffCounts.sort((a, b) => b.count - a.count);
-                let monthLabel = entry.month || '';
+                // Archive entries are written with `period` (e.g. "July 2026") and
+                // `periodKey` (e.g. "2026-07"). Older/other shapes may use `month`.
+                // Accept whichever is present so the month title always renders.
+                let monthLabel = entry.period || entry.month || entry.periodKey || '';
                 if (/^\d{4}-\d{2}$/.test(monthLabel)) {
                     const d = new Date(monthLabel + '-01T00:00:00');
                     monthLabel = d.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -2130,7 +2157,17 @@
                 for (const pizza in staffData) {
                     const entry = staffData[pizza];
                     const count = Array.isArray(entry) ? entry.length : (entry ? 1 : 0);
-                    if (count > 0) staffSummary[pizza] = count;
+                    if (count > 0) {
+                        // Preserve the most recent weigh date so "Last Weighed" survives
+                        // the rollover. Older archives that stored a bare number still work.
+                        let lastDate = null;
+                        if (Array.isArray(entry) && entry.length) {
+                            lastDate = entry.slice().sort().reverse()[0];
+                        } else if (typeof entry === 'string') {
+                            lastDate = entry;
+                        }
+                        staffSummary[pizza] = { count: count, lastDate: lastDate };
+                    }
                 }
                 if (Object.keys(staffSummary).length > 0) summary[staff] = staffSummary;
             }
@@ -2184,15 +2221,16 @@
                             const staffBlock = document.createElement('div');
                             staffBlock.className = 'history-staff-block';
 
-                            const total = Object.values(pizzas).reduce((a, b) => a + b, 0);
+                            const total = Object.values(pizzas).reduce((a, b) => a + archCount(b), 0);
                             staffBlock.innerHTML = `<div class="history-staff-name">${staffName} <span style="color:#555;font-weight:400;">&mdash; ${total} total</span></div>`;
 
                             const grid = document.createElement('div');
                             grid.className = 'history-pizza-grid';
 
                             Object.entries(pizzas)
-                                .sort((a, b) => b[1] - a[1])
-                                .forEach(([pizza, count]) => {
+                                .sort((a, b) => archCount(b[1]) - archCount(a[1]))
+                                .forEach(([pizza, val]) => {
+                                    const count = archCount(val);
                                     const chip = document.createElement('div');
                                     chip.className = 'history-pizza-chip';
                                     chip.innerHTML = `<span class="chip-count">${count}</span><span>${pizza}</span>`;
@@ -2312,6 +2350,91 @@ function openDev() {
             } catch (e) {
                 alert('❌ Invalid JSON. Please check your backup and try again.');
             }
+        }
+
+        function devFixArchiveMonths() {
+            const archive = JSON.parse(localStorage.getItem('hell_pizza_archive') || '[]');
+            if (!archive.length) {
+                alert('No archived months found. Nothing to fix.');
+                return;
+            }
+
+            const monthNames = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+            let changed = false;
+
+            for (let i = 0; i < archive.length; i++) {
+                const entry = archive[i];
+
+                // Summarise this entry so you can tell which real month it is.
+                const summary = entry.summary || {};
+                const totals = [];
+                for (const staff in summary) {
+                    let c = 0;
+                    for (const pizza in summary[staff]) c += archCount(summary[staff][pizza]);
+                    totals.push([staff, c]);
+                }
+                totals.sort((a, b) => b[1] - a[1]);
+                const storeTotal = totals.reduce((sum, t) => sum + t[1], 0);
+                const preview = totals.slice(0, 3).map(t => t[0] + ' ' + t[1]).join(', ') || '(empty)';
+
+                const currentKey = entry.periodKey || '(none)';
+                const currentLabel = entry.period || '(no label)';
+
+                // Suggested fix: the mislabel bug stamps data one month ahead, so the
+                // correct month is almost always the month *before* the stored key.
+                let suggested = '';
+                if (/^\d{4}-\d{2}$/.test(currentKey)) {
+                    const kp = currentKey.split('-');
+                    let sy = parseInt(kp[0], 10);
+                    let sm = parseInt(kp[1], 10) - 1; // one month earlier
+                    if (sm < 1) { sm = 12; sy -= 1; }
+                    suggested = sy + '-' + String(sm).padStart(2, '0');
+                }
+
+                const answer = prompt(
+                    'Archived month ' + (i + 1) + ' of ' + archive.length + '\n\n' +
+                    'Currently labelled: ' + currentLabel + '  [' + currentKey + ']\n' +
+                    'Store total: ' + storeTotal + '\n' +
+                    'Top weighers: ' + preview + '\n\n' +
+                    'Suggested correct month is pre-filled below.\n' +
+                    'Format YYYY-MM (e.g. 2026-06 for June).\n' +
+                    'Press OK to accept, edit it, or Cancel to leave unchanged.',
+                    suggested
+                );
+
+                if (!answer) continue;
+                const trimmed = answer.trim();
+                if (!/^\d{4}-\d{2}$/.test(trimmed)) {
+                    alert('"' + trimmed + '" is not valid. Use YYYY-MM. Skipping this one.');
+                    continue;
+                }
+
+                const parts = trimmed.split('-');
+                const yr = parseInt(parts[0], 10);
+                const mo = parseInt(parts[1], 10);
+                if (mo < 1 || mo > 12) {
+                    alert('Month must be 01-12. Skipping this one.');
+                    continue;
+                }
+
+                entry.periodKey = trimmed;
+                entry.period = monthNames[mo - 1] + ' ' + yr;
+                changed = true;
+            }
+
+            if (!changed) {
+                alert('No changes made.');
+                return;
+            }
+
+            localStorage.setItem('hell_pizza_archive', JSON.stringify(archive));
+
+            if (typeof syncToGoogleSheets === 'function') syncToGoogleSheets(true);
+            if (typeof updateLeaderboard === 'function') updateLeaderboard();
+
+            alert('✅ Archive months updated and synced. The spreadsheet will refresh on the next sync.');
         }
 
         function devClearData() {

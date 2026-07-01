@@ -63,9 +63,15 @@ function doPost(e) {
         for (var pn in allTimePizzas) allPizzaNames[pn] = true;
         for (var pn in currentPizzas) allPizzaNames[pn] = true;
         for (var pn in allPizzaNames) {
-          var atCount   = allTimePizzas[pn] || 0;
+          // allTimePizzas[pn] may be a bare number (old tablet build) or an
+          // object { count, lastDate } (new build that persists dates across resets).
+          var atVal     = allTimePizzas[pn];
+          var atCount   = (atVal && typeof atVal === 'object') ? (atVal.count || 0) : (atVal || 0);
+          var atDate    = (atVal && typeof atVal === 'object') ? (atVal.lastDate || null) : null;
           var curDates  = currentPizzas[pn] || [];
-          var lastDate  = curDates.length ? curDates.slice().sort().reverse()[0] : null;
+          var curLast   = curDates.length ? curDates.slice().sort().reverse()[0] : null;
+          // Prefer the most recent date we have: this month's, else the archived all-time date.
+          var lastDate  = curLast || atDate;
           if (atCount > 0) displayPizzas[pn] = { count: atCount, lastDate: lastDate };
         }
         writeStaffSheet(sheet, name, displayPizzas);
