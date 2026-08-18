@@ -177,12 +177,17 @@
 
         /* Pizza List Layout */
         .pizza-header {
-            position: relative;
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 20;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
+            background: #000000;
             border-bottom: 1px solid #E1D8B7;
+            padding-top: 20px;
             padding-bottom: 20px;
             min-height: 80px;
         }
@@ -212,7 +217,7 @@
 
         .current-staff {
             font-family: 'Bangers', cursive;
-            font-size: 6.75rem;
+            font-size: 4.5rem;
             color: #FE0000;
             text-align: center;
         }
@@ -640,6 +645,7 @@
             /* ---- Pizza screen header ---- */
             .pizza-header {
                 margin-bottom: 12px;
+                padding-top: 14px;
                 padding-bottom: 14px;
                 min-height: auto;
             }
